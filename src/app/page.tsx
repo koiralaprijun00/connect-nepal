@@ -96,12 +96,11 @@ export default function NepalTraversalPage() {
   
   if (!puzzle || !currentDate) {
     return (
-      <div className="max-w-screen-md mx-auto flex flex-col gap-4 p-4 md:p-6 min-h-screen animate-pulse">
-        <HeaderComponent />
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-4">
-            <Skeleton className="h-32 w-full rounded-lg" /> {/* PuzzleDisplay */}
-            <Skeleton className="h-64 w-full rounded-lg" /> {/* MapDisplay */}
+      <div className="max-w-screen-lg mx-auto flex flex-col gap-4 p-4 md:p-6 min-h-screen animate-pulse">
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
+            <Skeleton className="h-48 w-full rounded-lg" /> {/* Header + PuzzleDisplay */}
+            <Skeleton className="h-80 w-full rounded-lg" /> {/* MapDisplay - larger */}
           </div>
           <div className="flex flex-col gap-4">
             <Skeleton className="h-40 w-full rounded-lg" /> {/* GuessInput */}
@@ -114,13 +113,15 @@ export default function NepalTraversalPage() {
   }
 
   return (
-    <div className="max-w-screen-md mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
-      <HeaderComponent />
+    <div className="max-w-screen-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
       <div className="grid md:grid-cols-2 gap-6">
+        {/* Left Column */}
         <div className="flex flex-col gap-6">
+          <HeaderComponent />
           <PuzzleDisplay startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
           <MapDisplay guessedPath={currentPathForHint} correctPath={puzzle.shortestPath} />
         </div>
+        {/* Right Column */}
         <div className="flex flex-col gap-6">
           <GuessInput onSubmit={handleGuessSubmit} isLoading={isSubmittingGuess} />
           <HintSystem
