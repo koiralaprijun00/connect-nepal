@@ -1,11 +1,22 @@
+
 import type { Puzzle } from '@/types';
 
-// A simplified list for example purposes.
-// In a real app, this would be comprehensive and potentially include adjacency info.
-const DISTRICTS_NEPAL = [
-  "Kathmandu", "Lalitpur", "Bhaktapur", "Kavrepalanchok", 
-  "Sindhupalchok", "Nuwakot", "Rasuwa", "Dhading", "Makwanpur", "Chitwan"
-];
+// A more comprehensive list of districts in Nepal, sorted alphabetically.
+export const DISTRICTS_NEPAL = [
+  "Achham", "Arghakhanchi", "Baglung", "Baitadi", "Bajhang", "Bajura", "Banke", "Bara",
+  "Bardiya", "Bhaktapur", "Bhojpur", "Chitwan", "Dadeldhura", "Dailekh", "Dang",
+  "Darchula", "Dhading", "Dhankuta", "Dhanusha", "Dolakha", "Dolpa", "Doti", "Gorkha",
+  "Gulmi", "Humla", "Ilam", "Jajarkot", "Jhapa", "Jumla", "Kailali", "Kalikot",
+  "Kanchanpur", "Kapilvastu", "Kaski", "Kathmandu", "Kavrepalanchok", "Khotang",
+  "Lalitpur", "Lamjung", "Mahottari", "Makwanpur", "Manang", "Morang", "Mugu",
+  "Mustang", "Myagdi", "Nawalparasi", // Note: Nawalparasi was split; using old name for simplicity.
+  "Nuwakot", "Okhaldhunga", "Palpa", "Panchthar", "Parbat", "Parsa", "Pyuthan",
+  "Ramechhap", "Rasuwa", "Rautahat", "Rolpa", "Rukum", // Note: Rukum was split; using old name for simplicity.
+  "Rupandehi", "Salyan", "Sankhuwasabha", "Saptari", "Sarlahi", "Sindhuli",
+  "Sindhupalchok", "Siraha", "Solukhumbu", "Sunsari", "Surkhet", "Syangja",
+  "Tanahu", "Taplejung", "Terhathum", "Udayapur"
+].sort();
+
 
 const DAILY_PUZZLES: Puzzle[] = [
   {
