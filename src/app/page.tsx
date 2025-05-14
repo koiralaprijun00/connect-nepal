@@ -116,7 +116,7 @@ export default function NepalTraversalPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
+    <div className="max-w-6xl mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
       {/* Top Section - Combined Header and Puzzle */}
       <CombinedHeaderPuzzle startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
 
