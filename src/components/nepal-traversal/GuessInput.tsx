@@ -15,15 +15,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent } from "@/components/ui/popover"; // Removed PopoverTrigger
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send } from "lucide-react";
 import { DISTRICTS_NEPAL } from "@/lib/puzzle";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 const guessSchema = z.object({
   guess: z.string().min(1, { message: "Guess cannot be empty." })
-    .regex(/^[a-zA-Z\s,]+$/, { message: "Only letters, spaces, and commas allowed." }),
+    .regex(/^[a-zA-Z\s,']+$/, { message: "Only letters, spaces, commas, and apostrophes allowed." }), // Added apostrophe for names like Arghakhanchi
 });
 
 type GuessFormValues = z.infer<typeof guessSchema>;
@@ -42,6 +42,7 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
   });
 
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const currentGuessValue = form.watch("guess");
 
@@ -55,6 +56,7 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
 
   const filteredDistricts = useMemo(() => {
     if (!filterTerm) {
+      // Show all districts if filter term is empty (e.g., after a comma and space, or initial state)
       return DISTRICTS_NEPAL;
     }
     return DISTRICTS_NEPAL.filter(district =>
@@ -76,26 +78,30 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
       newValue = `${textBeforeLastComma.trim()} ${selectedDistrict}`; 
     }
     
-    form.setValue("guess", newValue.trim(), {
+    form.setValue("guess", newValue.trim() + ", ", { // Add comma and space for next entry
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true
     });
     setPopoverOpen(false);
+    inputRef.current?.focus(); // Refocus the input after selection
   }
 
   function handleFormSubmit(data: GuessFormValues) {
-    onSubmit(data.guess);
+    // Remove trailing comma if any before submitting
+    const cleanedGuess = data.guess.replace(/,\s*$/, "").trim();
+    onSubmit(cleanedGuess);
     form.reset();
     setPopoverOpen(false);
   }
   
   useEffect(() => {
-    if (!form.formState.isDirty && popoverOpen && !isLoading) {
-      // If form is reset externally, consider closing popover.
-      // But also don't close if user is actively interacting.
+    // This effect helps manage popover state if form is reset externally,
+    // or other conditions arise.
+    if (isLoading || !form.formState.isDirty) {
+      // setPopoverOpen(false); // Consider if this is too aggressive
     }
-  }, [form.formState.isDirty, popoverOpen, isLoading]);
+  }, [isLoading, form.formState.isDirty]);
 
 
   return (
@@ -113,34 +119,39 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
                 <FormItem>
                   <FormLabel htmlFor="guess-input" className="text-lg">District Sequence</FormLabel>
                   <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Input
-                          id="guess-input"
-                          placeholder="e.g., Kathmandu, Bhaktapur, Kavre"
-                          {...field}
-                          onFocus={() => {
-                            if (field.value && field.value.trim() !== '' && !isLoading) {
-                                setPopoverOpen(true);
-                            }
-                          }}
-                          onChange={(e) => {
-                            field.onChange(e); // Update form state
-                            if (e.target.value.trim() !== '' && !isLoading) {
-                              setPopoverOpen(true);
-                            } else {
-                              setPopoverOpen(false); // Close if input becomes empty
-                            }
-                          }}
-                          className="text-base"
-                          autoComplete="off"
-                        />
-                      </FormControl>
-                    </PopoverTrigger>
+                    {/* PopoverTrigger removed to allow Input to be directly interactive for typing */}
+                    <FormControl>
+                      <Input
+                        id="guess-input"
+                        placeholder="e.g., Kathmandu, Bhaktapur, Kavre"
+                        {...field}
+                        ref={inputRef} // Assign ref to the input
+                        onFocus={() => {
+                          if (!isLoading) {
+                            setPopoverOpen(true);
+                          }
+                        }}
+                        onChange={(e) => {
+                          field.onChange(e); // Update form state
+                          if (e.target.value.trim() !== '' && !isLoading) {
+                            setPopoverOpen(true);
+                          } else if (e.target.value.trim() === '') { 
+                            setPopoverOpen(false); 
+                          }
+                        }}
+                        className="text-base"
+                        autoComplete="off"
+                      />
+                    </FormControl>
                     <PopoverContent 
-                      className="p-2" 
-                      style={{ width: 'var(--radix-popover-trigger-width)' }}
+                      className="p-2 w-[var(--radix-popper-anchor-width)]" // Attempt to use anchor width
                       onOpenAutoFocus={(e) => e.preventDefault()} 
+                      // Added onInteractOutside to prevent closing when clicking on scrollbar
+                      onInteractOutside={(e) => {
+                        if (inputRef.current && inputRef.current.contains(e.target as Node)) {
+                          e.preventDefault();
+                        }
+                      }}
                     >
                       <ScrollArea className="h-[200px] rounded-md border">
                         {filteredDistricts.length === 0 ? (
@@ -162,7 +173,7 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
                     </PopoverContent>
                   </Popover>
                   <FormDescription>
-                    Type your path. A list of matching districts will appear to help you select.
+                    Type district names separated by commas. A list of matching districts will appear. Click to add.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -179,3 +190,4 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
     </Card>
   );
 }
+
