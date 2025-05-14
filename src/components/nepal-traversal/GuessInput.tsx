@@ -42,16 +42,11 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
   });
 
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredDistricts = DISTRICTS_NEPAL.filter(district =>
-    district.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   function handleDistrictSelect(selectedDistrict: string) {
     const currentGuess = form.getValues("guess");
     const newValue = currentGuess
-      ? `${currentGuess}, ${selectedDistrict}`
+      ? `${currentGuess.trim().replace(/,$/, '')}, ${selectedDistrict}` // Ensure no double commas
       : selectedDistrict;
 
     form.setValue("guess", newValue, {
@@ -60,7 +55,6 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
       shouldTouch: true
     });
     setPopoverOpen(false);
-    setSearchTerm(''); // Reset search term
   }
 
   function handleFormSubmit(data: GuessFormValues) {
@@ -72,7 +66,7 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
   // Close popover if form is reset externally or on successful submit
   useEffect(() => {
     if (!form.formState.isDirty && popoverOpen) {
-      // setPopoverOpen(false); // This might be too aggressive
+      // setPopoverOpen(false); // This might be too aggressive if user is just clicking around
     }
   }, [form.formState.isDirty, popoverOpen]);
 
@@ -111,18 +105,12 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
                       style={{ width: 'var(--radix-popover-trigger-width)' }}
                       onOpenAutoFocus={(e) => e.preventDefault()} // Prevent popover from stealing focus
                     >
-                      <Input
-                        placeholder="Search district..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="mb-2 text-base"
-                      />
                       <ScrollArea className="h-[200px] rounded-md border">
-                        {filteredDistricts.length === 0 ? (
-                          <p className="p-3 text-sm text-center text-muted-foreground">No district found.</p>
+                        {DISTRICTS_NEPAL.length === 0 ? (
+                          <p className="p-3 text-sm text-center text-muted-foreground">No districts available.</p>
                         ) : (
                           <div className="p-1">
-                            {filteredDistricts.map(district => (
+                            {DISTRICTS_NEPAL.map(district => (
                               <div
                                 key={district}
                                 onClick={() => handleDistrictSelect(district)}
