@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send } from "lucide-react";
 import { DISTRICTS_NEPAL } from "@/lib/puzzle";
+import { useState, useEffect } from "react";
 
 const guessSchema = z.object({
   guess: z.string().min(1, { message: "Guess cannot be empty." })
@@ -39,25 +41,41 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
     },
   });
 
-  function handleFormSubmit(data: GuessFormValues) {
-    onSubmit(data.guess);
-    form.reset();
-  }
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredDistricts = DISTRICTS_NEPAL.filter(district =>
+    district.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   function handleDistrictSelect(selectedDistrict: string) {
-    if (!selectedDistrict) return;
-
     const currentGuess = form.getValues("guess");
-    const newValue = currentGuess 
-      ? `${currentGuess}, ${selectedDistrict}` 
+    const newValue = currentGuess
+      ? `${currentGuess}, ${selectedDistrict}`
       : selectedDistrict;
-    
-    form.setValue("guess", newValue, { 
+
+    form.setValue("guess", newValue, {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true
     });
+    setPopoverOpen(false);
+    setSearchTerm(''); // Reset search term
   }
+
+  function handleFormSubmit(data: GuessFormValues) {
+    onSubmit(data.guess);
+    form.reset();
+    setPopoverOpen(false); // Close popover on submit
+  }
+  
+  // Close popover if form is reset externally or on successful submit
+  useEffect(() => {
+    if (!form.formState.isDirty && popoverOpen) {
+      // setPopoverOpen(false); // This might be too aggressive
+    }
+  }, [form.formState.isDirty, popoverOpen]);
+
 
   return (
     <Card className="shadow-lg">
@@ -73,40 +91,58 @@ export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel htmlFor="guess-input" className="text-lg">District Sequence</FormLabel>
-                  <FormControl>
-                    <Input 
-                      id="guess-input"
-                      placeholder="e.g., Kathmandu, Bhaktapur, Kavre" 
-                      {...field} 
-                      className="text-base"
-                    />
-                  </FormControl>
+                  <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Input
+                          id="guess-input"
+                          placeholder="e.g., Kathmandu, Bhaktapur, Kavre"
+                          {...field}
+                          onFocus={() => {
+                            if(!form.formState.isSubmitting) setPopoverOpen(true)
+                          }}
+                          className="text-base"
+                          autoComplete="off"
+                        />
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                      className="p-2" 
+                      style={{ width: 'var(--radix-popover-trigger-width)' }}
+                      onOpenAutoFocus={(e) => e.preventDefault()} // Prevent popover from stealing focus
+                    >
+                      <Input
+                        placeholder="Search district..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="mb-2 text-base"
+                      />
+                      <ScrollArea className="h-[200px] rounded-md border">
+                        {filteredDistricts.length === 0 ? (
+                          <p className="p-3 text-sm text-center text-muted-foreground">No district found.</p>
+                        ) : (
+                          <div className="p-1">
+                            {filteredDistricts.map(district => (
+                              <div
+                                key={district}
+                                onClick={() => handleDistrictSelect(district)}
+                                className="text-sm p-2 rounded-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                              >
+                                {district}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
                   <FormDescription>
-                    Enter districts separated by commas, or use the selector below.
+                    Type your path directly, or focus the input to select and append districts from a list.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <FormItem>
-              <FormLabel htmlFor="quick-add-district" className="text-lg">Quick Add District</FormLabel>
-              <Select onValueChange={handleDistrictSelect}>
-                <SelectTrigger id="quick-add-district" className="w-full text-base">
-                  <SelectValue placeholder="Select a district to add to your path" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DISTRICTS_NEPAL.map(district => (
-                    <SelectItem key={district} value={district} className="text-base">
-                      {district}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Selecting a district will append it to the path above.
-              </FormDescription>
-            </FormItem>
 
             <Button type="submit" className="w-full text-lg" disabled={isLoading}>
               <Send className="mr-2 h-5 w-5" />
