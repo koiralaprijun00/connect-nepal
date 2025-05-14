@@ -5,8 +5,7 @@ import type { Puzzle, SubmittedGuess, HintType as AppHintType } from '@/types';
 import { generateHint, type HintGeneratorInput, type HintGeneratorOutput } from '@/ai/flows/hint-generator';
 import { getDailyPuzzle, calculateScore, parseGuessInput } from '@/lib/puzzle';
 
-import { HeaderComponent } from '@/components/nepal-traversal/Header';
-import { PuzzleDisplay } from '@/components/nepal-traversal/PuzzleDisplay';
+import { CombinedHeaderPuzzle } from '@/components/nepal-traversal/CombinedHeaderPuzzle';
 import { MapDisplay } from '@/components/nepal-traversal/MapDisplay';
 import { GuessInput } from '@/components/nepal-traversal/GuessInput';
 import { GuessList } from '@/components/nepal-traversal/GuessList';
@@ -96,10 +95,8 @@ export default function NepalTraversalPage() {
   if (!puzzle || !currentDate) {
     return (
       <div className="max-w-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen animate-pulse">
-        {/* Skeleton for Header */}
-        <Skeleton className="h-32 w-full rounded-lg" />
-        {/* Skeleton for PuzzleDisplay */}
-        <Skeleton className="h-32 w-full rounded-lg" />
+        {/* Skeleton for Combined Header and Puzzle */}
+        <Skeleton className="h-20 w-full rounded-lg mb-4" />
 
         {/* Skeleton for Two-Column Layout */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -120,9 +117,8 @@ export default function NepalTraversalPage() {
 
   return (
     <div className="max-w-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
-      {/* Top Section - Full Width */}
-      <HeaderComponent />
-      <PuzzleDisplay startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
+      {/* Top Section - Combined Header and Puzzle */}
+      <CombinedHeaderPuzzle startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
 
       {/* Bottom Section - Two Columns */}
       <div className="grid md:grid-cols-2 gap-6">
