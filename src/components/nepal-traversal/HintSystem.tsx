@@ -3,7 +3,7 @@ import type { HintType as AIHintType } from "@/types"; // Renamed to avoid confl
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lightbulb, Zap, Rows, MessageSquareQuestion } from "lucide-react";
+import { Lightbulb, Zap, Rows, MessageSquareQuote } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useState, useEffect } from "react";
 
@@ -72,7 +72,7 @@ export function HintSystem({ onHintRequest, hint, hintType, isLoading, currentGu
             disabled={isLoading}
             className="bg-amber-400 hover:bg-amber-500 text-secondary-foreground"
           >
-            <MessageSquareQuestion className="mr-2 h-4 w-4" /> Smart Hint
+            <MessageSquareQuote className="mr-2 h-4 w-4" /> Smart Hint
           </Button>
         </div>
         
