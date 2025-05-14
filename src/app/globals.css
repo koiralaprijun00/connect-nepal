@@ -8,11 +8,6 @@
   The --font-geist-sans variable is set up by adding GeistSans.variable
   to the <html> tag's className in layout.tsx.
 */
-/*
-body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-}
-*/
 
 @layer base {
   :root {
@@ -92,5 +87,45 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* SVG Map District Styles */
+@layer components {
+  .district-default {
+    fill: hsl(var(--muted)); /* Default fill, e.g., light gray */
+    stroke: hsl(var(--border));
+    stroke-width: 0.5px;
+    transition: fill 0.2s ease-in-out, stroke 0.2s ease-in-out;
+  }
+  .district-default:hover {
+    fill: hsl(var(--accent) / 0.2); /* Slightly darker or accent on hover */
+    stroke: hsl(var(--accent));
+  }
+  .district-start {
+    fill: hsl(var(--primary)); /* Green */
+    stroke: hsl(var(--primary-foreground) / 0.5);
+    stroke-width: 1px;
+  }
+  .district-end {
+    fill: hsl(var(--destructive)); /* Red */
+    stroke: hsl(var(--destructive-foreground) / 0.5);
+    stroke-width: 1px;
+  }
+  .district-correct-path { /* Part of the true shortest path, not yet correctly guessed */
+    fill: hsl(var(--primary) / 0.3); /* Light Greenish */
+    stroke: hsl(var(--primary) / 0.8);
+    stroke-width: 0.75px;
+  }
+  .district-guessed-correct { /* Guessed by user AND correct in sequence */
+    fill: hsl(var(--accent)); /* Eg. Indigo */
+    stroke: hsl(var(--accent-foreground) / 0.5);
+    stroke-width: 1.5px; /* Make it stand out */
+  }
+  .district-guessed-incorrect { /* Guessed by user AND incorrect */
+    fill: hsl(var(--secondary) / 0.5); /* Eg. Orange/Amber, semi-transparent */
+    stroke: hsl(var(--secondary));
+    stroke-width: 0.75px;
+    /* opacity: 0.8; */
   }
 }

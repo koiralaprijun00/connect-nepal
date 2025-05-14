@@ -1,26 +1,27 @@
+
 "use client";
-import Image from 'next/image';
 import { Card, CardContent } from "@/components/ui/card";
+import { NepalDistrictMap } from './NepalDistrictMap'; // Import the new SVG map component
 
 interface MapDisplayProps {
-  guessedPath: string[]; // Will be used later for highlighting
-  correctPath: string[]; // Will be used later for highlighting
+  guessedPath: string[];
+  correctPath: string[];
+  startDistrict: string;
+  endDistrict: string;
 }
 
-export function MapDisplay({ guessedPath, correctPath }: MapDisplayProps) {
+export function MapDisplay({ guessedPath, correctPath, startDistrict, endDistrict }: MapDisplayProps) {
   return (
-    <Card className="shadow-lg">
-      <CardContent className="flex justify-center items-center p-2 aspect-[4/3] relative">
-        <Image 
-          src="https://placehold.co/600x450.png" 
-          alt="Map of Nepal with districts" 
-          data-ai-hint="Nepal map districts"
-          width={600}
-          height={450}
-          className="rounded-md object-contain"
-          priority
+    <Card className="shadow-lg overflow-hidden">
+      <CardContent className="p-2 aspect-[4/3] flex justify-center items-center">
+        {/* Replace Image with NepalDistrictMap */}
+        <NepalDistrictMap
+          guessedPath={guessedPath}
+          correctPath={correctPath}
+          startDistrict={startDistrict}
+          endDistrict={endDistrict}
+          // The className for the SVG element itself can be managed here or within NepalDistrictMap
         />
-        {/* Future: SVG overlay for paths and districts */}
       </CardContent>
     </Card>
   );

@@ -59,7 +59,7 @@ export default function NepalTraversalPage() {
     };
 
     setSubmittedGuesses(prev => [newGuess, ...prev]);
-    setCurrentPathForHint(parsedPath);
+    setCurrentPathForHint(parsedPath); // Update path for map display
 
     if (score === 100) {
       toast({ title: "Congratulations!", description: feedback, variant: "default", duration: 5000 });
@@ -76,7 +76,7 @@ export default function NepalTraversalPage() {
 
     try {
       const hintInput: HintGeneratorInput = {
-        currentGuess: currentPathForHint,
+        currentGuess: currentPathForHint, // Use currentPathForHint which reflects the latest guess for map
         shortestPath: puzzle.shortestPath,
         hintType: hintType,
       };
@@ -95,17 +95,12 @@ export default function NepalTraversalPage() {
   if (!puzzle || !currentDate) {
     return (
       <div className="max-w-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen animate-pulse">
-        {/* Skeleton for Combined Header and Puzzle */}
-        <Skeleton className="h-20 w-full rounded-lg mb-4" />
-
-        {/* Skeleton for Two-Column Layout */}
+        <Skeleton className="h-20 w-full rounded-lg mb-4" /> {/* CombinedHeaderPuzzle */}
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Left Column Skeletons */}
           <div className="flex flex-col gap-6">
             <Skeleton className="h-64 w-full rounded-lg" /> {/* MapDisplay */}
             <Skeleton className="h-40 w-full rounded-lg" /> {/* GuessInput */}
           </div>
-          {/* Right Column Skeletons */}
           <div className="flex flex-col gap-6">
             <Skeleton className="h-48 w-full rounded-lg" /> {/* HintSystem */}
             <Skeleton className="h-40 w-full rounded-lg" /> {/* GuessList */}
@@ -116,15 +111,18 @@ export default function NepalTraversalPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
-      {/* Top Section - Combined Header and Puzzle */}
+    <div className="max-w-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
       <CombinedHeaderPuzzle startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
 
-      {/* Bottom Section - Two Columns */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="flex flex-col gap-6">
-          <MapDisplay guessedPath={currentPathForHint} correctPath={puzzle.shortestPath} />
+          <MapDisplay 
+            guessedPath={currentPathForHint} 
+            correctPath={puzzle.shortestPath}
+            startDistrict={puzzle.startDistrict}
+            endDistrict={puzzle.endDistrict}
+          />
           <GuessInput onSubmit={handleGuessSubmit} isLoading={isSubmittingGuess} />
         </div>
         {/* Right Column */}
