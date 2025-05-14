@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect, useCallback } from 'react';
 import type { Puzzle, SubmittedGuess, HintType as AppHintType } from '@/types';
@@ -95,32 +96,44 @@ export default function NepalTraversalPage() {
   
   if (!puzzle || !currentDate) {
     return (
-      <div className="max-w-screen-sm mx-auto flex flex-col gap-4 p-4 min-h-screen animate-pulse">
+      <div className="max-w-screen-md mx-auto flex flex-col gap-4 p-4 md:p-6 min-h-screen animate-pulse">
         <HeaderComponent />
-        <Skeleton className="h-32 w-full rounded-lg" />
-        <Skeleton className="h-64 w-full rounded-lg" />
-        <Skeleton className="h-40 w-full rounded-lg" />
-        <Skeleton className="h-48 w-full rounded-lg" />
-        <Skeleton className="h-40 w-full rounded-lg" />
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-32 w-full rounded-lg" /> {/* PuzzleDisplay */}
+            <Skeleton className="h-64 w-full rounded-lg" /> {/* MapDisplay */}
+          </div>
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-40 w-full rounded-lg" /> {/* GuessInput */}
+            <Skeleton className="h-48 w-full rounded-lg" /> {/* HintSystem */}
+            <Skeleton className="h-40 w-full rounded-lg" /> {/* GuessList */}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-screen-sm mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
+    <div className="max-w-screen-md mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
       <HeaderComponent />
-      <PuzzleDisplay startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
-      <MapDisplay guessedPath={currentPathForHint} correctPath={puzzle.shortestPath} />
-      <GuessInput onSubmit={handleGuessSubmit} isLoading={isSubmittingGuess} />
-      <HintSystem
-        onHintRequest={handleHintRequest}
-        hint={aiHint?.hint}
-        hintType={aiHint?.hintType}
-        isLoading={isHintLoading}
-        currentGuess={currentPathForHint}
-        shortestPath={puzzle.shortestPath}
-      />
-      <GuessList guesses={submittedGuesses} />
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-6">
+          <PuzzleDisplay startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
+          <MapDisplay guessedPath={currentPathForHint} correctPath={puzzle.shortestPath} />
+        </div>
+        <div className="flex flex-col gap-6">
+          <GuessInput onSubmit={handleGuessSubmit} isLoading={isSubmittingGuess} />
+          <HintSystem
+            onHintRequest={handleHintRequest}
+            hint={aiHint?.hint}
+            hintType={aiHint?.hintType}
+            isLoading={isHintLoading}
+            currentGuess={currentPathForHint}
+            shortestPath={puzzle.shortestPath}
+          />
+          <GuessList guesses={submittedGuesses} />
+        </div>
+      </div>
       <footer className="text-center py-4 text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} Nepal Traversal. Puzzle changes daily.</p>
       </footer>
