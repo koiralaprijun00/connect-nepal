@@ -16,13 +16,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function NepalTraversalPage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
-  const [currentPathForHint, setCurrentPathForHint] = useState<string[]>([]); // Path being typed or last correct prefix
+  const [currentPathForHint, setCurrentPathForHint] = useState<string[]>([]);
   const [submittedGuesses, setSubmittedGuesses] = useState<SubmittedGuess[]>([]);
   const [aiHint, setAiHint] = useState<HintGeneratorOutput | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
-
 
   const { toast } = useToast();
 
@@ -34,9 +33,9 @@ export default function NepalTraversalPage() {
     if (currentDate) {
       const dailyPuzzle = getDailyPuzzle(currentDate);
       setPuzzle(dailyPuzzle);
-      setSubmittedGuesses([]); // Reset guesses for new puzzle
-      setAiHint(null); // Reset hint
-      setCurrentPathForHint(dailyPuzzle.shortestPath.length > 0 ? [dailyPuzzle.shortestPath[0]] : []); // Initial hint context
+      setSubmittedGuesses([]);
+      setAiHint(null);
+      setCurrentPathForHint(dailyPuzzle.shortestPath.length > 0 ? [dailyPuzzle.shortestPath[0]] : []);
     }
   }, [currentDate]);
 
@@ -60,8 +59,8 @@ export default function NepalTraversalPage() {
       feedback,
     };
 
-    setSubmittedGuesses(prev => [newGuess, ...prev]); // Add to top of the list
-    setCurrentPathForHint(parsedPath); // Update hint context with the latest guess
+    setSubmittedGuesses(prev => [newGuess, ...prev]);
+    setCurrentPathForHint(parsedPath);
 
     if (score === 100) {
       toast({ title: "Congratulations!", description: feedback, variant: "default", duration: 5000 });
@@ -78,7 +77,7 @@ export default function NepalTraversalPage() {
 
     try {
       const hintInput: HintGeneratorInput = {
-        currentGuess: currentPathForHint, // Use the path being built or last guess
+        currentGuess: currentPathForHint,
         shortestPath: puzzle.shortestPath,
         hintType: hintType,
       };
@@ -96,14 +95,21 @@ export default function NepalTraversalPage() {
   
   if (!puzzle || !currentDate) {
     return (
-      <div className="max-w-screen-lg mx-auto flex flex-col gap-4 p-4 md:p-6 min-h-screen animate-pulse">
+      <div className="max-w-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen animate-pulse">
+        {/* Skeleton for Header */}
+        <Skeleton className="h-32 w-full rounded-lg" />
+        {/* Skeleton for PuzzleDisplay */}
+        <Skeleton className="h-32 w-full rounded-lg" />
+
+        {/* Skeleton for Two-Column Layout */}
         <div className="grid md:grid-cols-2 gap-6">
+          {/* Left Column Skeletons */}
           <div className="flex flex-col gap-6">
-            <Skeleton className="h-48 w-full rounded-lg" /> {/* Header + PuzzleDisplay */}
-            <Skeleton className="h-80 w-full rounded-lg" /> {/* MapDisplay - larger */}
-          </div>
-          <div className="flex flex-col gap-4">
+            <Skeleton className="h-64 w-full rounded-lg" /> {/* MapDisplay */}
             <Skeleton className="h-40 w-full rounded-lg" /> {/* GuessInput */}
+          </div>
+          {/* Right Column Skeletons */}
+          <div className="flex flex-col gap-6">
             <Skeleton className="h-48 w-full rounded-lg" /> {/* HintSystem */}
             <Skeleton className="h-40 w-full rounded-lg" /> {/* GuessList */}
           </div>
@@ -113,17 +119,20 @@ export default function NepalTraversalPage() {
   }
 
   return (
-    <div className="max-w-screen-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
+    <div className="max-w-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
+      {/* Top Section - Full Width */}
+      <HeaderComponent />
+      <PuzzleDisplay startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
+
+      {/* Bottom Section - Two Columns */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="flex flex-col gap-6">
-          <HeaderComponent />
-          <PuzzleDisplay startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
           <MapDisplay guessedPath={currentPathForHint} correctPath={puzzle.shortestPath} />
+          <GuessInput onSubmit={handleGuessSubmit} isLoading={isSubmittingGuess} />
         </div>
         {/* Right Column */}
         <div className="flex flex-col gap-6">
-          <GuessInput onSubmit={handleGuessSubmit} isLoading={isSubmittingGuess} />
           <HintSystem
             onHintRequest={handleHintRequest}
             hint={aiHint?.hint}
@@ -135,6 +144,7 @@ export default function NepalTraversalPage() {
           <GuessList guesses={submittedGuesses} />
         </div>
       </div>
+      
       <footer className="text-center py-4 text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} Nepal Traversal. Puzzle changes daily.</p>
       </footer>
