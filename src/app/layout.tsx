@@ -4,13 +4,8 @@ import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = GeistSans({
-  variable: '--font-geist-sans',
-});
-
-const geistMono = GeistMono({
-  variable: '--font-geist-mono',
-});
+// GeistSans and GeistMono are objects, not functions to be called here.
+// Their .variable property provides a className to set up CSS variables.
 
 export const metadata: Metadata = {
   title: 'Nepal Traversal',
@@ -23,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className={`antialiased font-sans`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`font-sans antialiased`}>
         {children}
         <Toaster />
       </body>
