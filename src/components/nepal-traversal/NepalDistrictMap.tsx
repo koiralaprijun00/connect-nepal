@@ -29,32 +29,24 @@ export function NepalDistrictMap({
 
     // 1. Reset all relevant elements to default class
     allElements.forEach(el => {
-      // Check if the element is likely a district (e.g., has an ID or data-name)
-      // or apply to all if that's preferred. This avoids styling SVG boilerplate.
       if (el.id || el.dataset.name) {
         el.setAttribute('class', 'district-default');
       }
     });
 
     const setElementClass = (districtName: string, cssClass: string) => {
-      if (!districtName) return; // Guard against empty district names
+      if (!districtName) return; 
       const districtNameLower = districtName.toLowerCase();
-      // Try ID first (case-sensitive)
       let el = svg.getElementById(districtName);
-      // Then try ID (case-insensitive common pattern)
       if (!el) el = svg.getElementById(districtNameLower);
       if (!el) el = svg.getElementById(districtName.charAt(0).toUpperCase() + districtName.slice(1).toLowerCase());
 
-
-      // Fallback to data-name (case-sensitive)
       if (!el) el = svg.querySelector(`[data-name="${districtName}"]`);
-      // Fallback to data-name (case-insensitive)
       if (!el) el = svg.querySelector(`[data-name="${districtNameLower}"]`);
       if (!el) el = svg.querySelector(`[data-name="${districtName.charAt(0).toUpperCase() + districtName.slice(1).toLowerCase()}"]`);
 
-
       if (el) {
-        el.setAttribute('class', cssClass); // Override completely
+        el.setAttribute('class', cssClass); 
       }
     };
     
@@ -71,13 +63,9 @@ export function NepalDistrictMap({
       const guessedDistrictLower = originalGuessedDistrictName.toLowerCase();
 
       if (index < lowerCorrectPath.length && guessedDistrictLower === lowerCorrectPath[index]) {
-        // This district is correctly guessed and in the correct sequence.
         setElementClass(originalGuessedDistrictName, 'district-guessed-correct');
       } else {
-        // This district is an incorrect guess for the current position.
-        // If it's not part of the overall correct path, mark it as plain incorrect.
         if (!lowerCorrectPath.includes(guessedDistrictLower)) {
-          // Ensure we don't re-style start/end if they are part of an incorrect guess
           const el = svg.getElementById(originalGuessedDistrictName) || svg.querySelector(`[data-name="${originalGuessedDistrictName}"]`);
           if (el) {
             const currentClass = el.getAttribute('class') || '';
@@ -86,8 +74,6 @@ export function NepalDistrictMap({
             }
           }
         }
-        // If lowerCorrectPath.includes(guessedDistrictLower) but it's in the wrong spot,
-        // it will retain its 'district-correct-path' style from step 2.
       }
     });
 
@@ -100,40 +86,35 @@ export function NepalDistrictMap({
   return (
     <svg
       ref={svgRef}
-      viewBox="0 0 800 600" // USER ACTION: Adjust this to your SVG's viewBox
+      viewBox="0 0 800 600" // ADJUST THIS to your SVG's viewBox
       xmlns="http://www.w3.org/2000/svg"
       className={cn('w-full h-auto object-contain bg-muted/20 rounded-md border border-border shadow-sm', className)}
-      data-ai-hint="Nepal map districts" /* Keep or update AI hint */
+      data-ai-hint="Nepal map districts"
       {...rest}
     >
-      {/*
-        USER ACTION REQUIRED:
-        1. PASTE YOUR SVG MARKUP HERE.
-           Replace the placeholder <rect> and <text> below with your actual SVG code
-           (e.g., <g><path id="Kathmandu" d="..." /></g> ...).
-
-        2. ENSURE DISTRICT IDENTIFICATION:
-           Each styleable district element (e.g., <path>, <g>) MUST have an 'id' attribute
-           that matches the district name used in your game (e.g., id="Kathmandu").
-           The matching logic tries case-sensitive, then all-lowercase, then Capitalized.
-           Using 'data-name="DistrictName"' is also supported as a fallback.
-
-        3. ADJUST `viewBox` (above):
-           Modify the `viewBox` attribute of THIS <svg> element to match your source SVG.
-
-        EXAMPLE of what you might paste (very simplified):
-        <g fill="#ccc" stroke="#333" strokeWidth="0.5">
-          <path id="Kaski" d="M100,100 L150,100 L125,150 Z" />
-          <path id="Tanahu" data-name="Tanahu" d="M150,100 L200,100 L175,150 Z" />
+      {/* 
+        Replace the 'd' attribute content for each path with your actual SVG path data.
+        Ensure the 'id' of each <g> tag matches the district name used in your game logic.
+        Adjust the main 'viewBox' attribute of this <svg> element above to fit all your districts.
+      */}
+      <g id="Kathmandu">
+        {/* Replace with your actual path data for Kathmandu */}
+        <path d="M100,100 L150,100 L125,150 Z" /> 
+      </g>
+      <g id="Bhaktapur">
+        {/* Replace with your actual path data for Bhaktapur */}
+        <path d="M160,100 L210,100 L185,150 Z" />
+      </g>
+      {/* 
+        Add more <g id="DistrictName"><path d="..." /></g> elements for all other districts here.
+        For example:
+        <g id="Lalitpur">
+          <path d="M100,160 L150,160 L125,210 Z" />
+        </g>
+        <g id="Kavrepalanchok">
+         <path d="M160,160 L210,160 L185,210 Z" />
         </g>
       */}
-       <rect width="100%" height="100%" fill="hsl(var(--muted))" />
-       <text x="50%" y="45%" dominantBaseline="middle" textAnchor="middle" fontFamily="sans-serif" fontSize="20" fill="hsl(var(--muted-foreground))">
-         Your Nepal SVG Map Here
-       </text>
-       <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fontFamily="sans-serif" fontSize="14" fill="hsl(var(--muted-foreground))" className="italic">
-         (Paste SVG code & ensure district IDs match game data)
-       </text>
     </svg>
   );
 }
