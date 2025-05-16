@@ -1,34 +1,16 @@
+'use client';
+
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { DISTRICTS_NEPAL } from "@/lib/puzzle";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+  Popover,
+  PopoverTrigger,
+  PopoverContent
+} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
-import { flushSync } from "react-dom";
-
-const guessSchema = z.object({
-  guess: z
-    .string()
-    .min(1, { message: "Guess cannot be empty." })
-    .regex(/^[a-zA-Z\s,']+$/, {
-      message: "Only letters, spaces, commas, and apostrophes allowed.",
-    }),
-});
-
-type GuessFormValues = z.infer<typeof guessSchema>;
 
 interface GuessInputProps {
   onSubmit: (intermediateDistricts: string[]) => void;
@@ -38,36 +20,38 @@ interface GuessInputProps {
   latestGuessResult?: { type: 'success' | 'error'; message: string } | null;
 }
 
-export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, latestGuessResult }: GuessInputProps) {
+export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, startDistrict, endDistrict, latestGuessResult }) => {
   const [intermediateDistricts, setIntermediateDistricts] = useState<string[]>([]);
-  const [inputValue, setInputValue] = useState("");
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [popoverOpen, setPopoverOpen] = useState<boolean>(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Filter districts for autocomplete suggestions, excluding already selected and start/end
-  const filteredDistricts = useMemo(() => {
+  const filteredDistricts: string[] = useMemo(() => {
     const exclude = [startDistrict, endDistrict, ...intermediateDistricts].map(d => d.toLowerCase());
     return DISTRICTS_NEPAL.filter(
-      (district) =>
+      (district: string) =>
         !exclude.includes(district.toLowerCase()) &&
         district.toLowerCase().includes(inputValue.trim().toLowerCase())
     );
   }, [inputValue, intermediateDistricts, startDistrict, endDistrict]);
 
   function handleDistrictSelect(selectedDistrict: string) {
-    setIntermediateDistricts((prev) => [...prev, selectedDistrict]);
+    setIntermediateDistricts((prev: string[]) => [...prev, selectedDistrict]);
     setInputValue("");
     setPopoverOpen(false);
     setHighlightedIndex(null);
+    setError(null);
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
   function handleRemoveDistrict(index: number) {
-    setIntermediateDistricts((prev) => prev.filter((_, i) => i !== index));
+    setIntermediateDistricts((prev: string[]) => prev.filter((_, i) => i !== index));
   }
 
-  function handleFormSubmit(e: React.FormEvent) {
+  function handleFormSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     onSubmit(intermediateDistricts);
     setIntermediateDistricts([]);
@@ -76,19 +60,34 @@ export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, la
     setHighlightedIndex(null);
   }
 
+  function handleInputEnter() {
+    const input = inputValue.trim();
+    if (!input) return;
+    // Check if input matches a valid, not-already-selected district
+    const match = DISTRICTS_NEPAL.find(
+      (d: string) => d.toLowerCase() === input.toLowerCase() &&
+      ![startDistrict, endDistrict, ...intermediateDistricts].map(x => x.toLowerCase()).includes(d.toLowerCase())
+    );
+    if (match) {
+      handleDistrictSelect(match);
+    } else {
+      setError('Unknown district');
+    }
+  }
+
   // Keyboard navigation for popover
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (popoverOpen && filteredDistricts.length > 0) {
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setHighlightedIndex((old) =>
+          setHighlightedIndex((old: number | null) =>
             old === null || old === filteredDistricts.length - 1 ? 0 : old + 1
           );
           break;
         case "ArrowUp":
           e.preventDefault();
-          setHighlightedIndex((old) =>
+          setHighlightedIndex((old: number | null) =>
             old === null || old === 0 ? filteredDistricts.length - 1 : old - 1
           );
           break;
@@ -96,8 +95,8 @@ export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, la
           e.preventDefault();
           if (highlightedIndex !== null && filteredDistricts[highlightedIndex]) {
             handleDistrictSelect(filteredDistricts[highlightedIndex]);
-          } else if (inputValue.trim() && filteredDistricts.length > 0) {
-            handleDistrictSelect(filteredDistricts[0]);
+          } else if (inputValue.trim()) {
+            handleInputEnter();
           }
           break;
         case "Escape":
@@ -108,20 +107,24 @@ export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, la
         default:
           break;
       }
+    } else if (e.key === "Enter" && inputValue.trim()) {
+      e.preventDefault();
+      handleInputEnter();
     } else if (e.key === "Enter" && inputValue.trim() === "") {
       e.preventDefault();
       handleFormSubmit(e as any);
     }
   };
 
-  // Open popover when input is focused or typing and there are suggestions
+  // Control popover state based on input value
   useEffect(() => {
     if (isLoading) {
       setPopoverOpen(false);
       setHighlightedIndex(null);
       return;
     }
-    if (document.activeElement === inputRef.current && inputValue.trim() && filteredDistricts.length > 0) {
+    // Only open popover when input has content and there are suggestions
+    if (inputValue.trim() && filteredDistricts.length > 0 && document.activeElement === inputRef.current) {
       setPopoverOpen(true);
     } else if (!inputValue.trim()) {
       setPopoverOpen(false);
@@ -133,50 +136,49 @@ export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, la
     <form onSubmit={handleFormSubmit} className="space-y-6">
       <div>
         <div className="text-lg font-medium mb-2">District Sequence</div>
+        <div className="text-sm text-muted-foreground mb-2">Add the districts you think connect the start and end. Only include the districts in between.</div>
         {/* Chips for selected intermediate districts */}
         {intermediateDistricts.length > 0 && (
           <div className="flex items-center flex-wrap gap-2 mb-2 overflow-x-auto">
-            {intermediateDistricts.map((district, idx) => (
-              <span key={district + idx} className="flex items-center px-2 py-1 rounded bg-blue-100 text-blue-800 font-semibold">
+            {intermediateDistricts.map((district: string, idx: number) => (
+              <span key={district + idx} className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
                 {district}
                 <button
                   type="button"
-                  className="ml-1 text-xs text-red-500 hover:text-red-700"
+                  className="ml-1.5 -mr-0.5 h-4 w-4 rounded-full bg-blue-200 text-blue-700 inline-flex items-center justify-center"
                   onClick={() => handleRemoveDistrict(idx)}
                   aria-label={`Remove ${district}`}
                 >
-                  ×
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
                 </button>
               </span>
             ))}
           </div>
         )}
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Input
-              ref={inputRef}
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              onFocus={() => {
-                if (inputValue.trim() && filteredDistricts.length > 0) setPopoverOpen(true);
-              }}
-              onBlur={() => setTimeout(() => setPopoverOpen(false), 150)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a district and press Enter or select"
-              disabled={isLoading}
-              className="text-base"
-              autoComplete="off"
-            />
-          </PopoverTrigger>
-          <PopoverContent className="p-2 w-[var(--radix-popper-anchor-width)] max-h-60 overflow-y-auto" onOpenAutoFocus={e => e.preventDefault()}>
-            <ScrollArea className="rounded-md border max-h-52 overflow-y-auto">
-              {filteredDistricts.length === 0 ? (
-                <p className="p-3 text-sm text-center text-muted-foreground">
-                  No matching districts.
-                </p>
-              ) : (
+        <div className="relative">
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setInputValue(e.target.value);
+              setError(null);
+            }}
+            onFocus={() => {
+              if (inputValue.trim() && filteredDistricts.length > 0) setPopoverOpen(true);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a district and press Enter or select"
+            disabled={isLoading}
+            className="text-base"
+            autoComplete="off"
+          />
+          {popoverOpen && filteredDistricts.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border">
+              <ScrollArea className="rounded-md max-h-52 overflow-y-auto">
                 <div className="p-1">
-                  {filteredDistricts.map((district, index) => (
+                  {filteredDistricts.map((district: string, index: number) => (
                     <div
                       key={district}
                       onClick={() => handleDistrictSelect(district)}
@@ -188,10 +190,11 @@ export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, la
                     </div>
                   ))}
                 </div>
-              )}
-            </ScrollArea>
-          </PopoverContent>
-        </Popover>
+              </ScrollArea>
+            </div>
+          )}
+        </div>
+        {error && <div className="text-red-600 text-sm mt-1">{error}</div>}
       </div>
       <Button type="submit" className="w-full text-lg" disabled={isLoading || intermediateDistricts.length === 0}>
         <Send className="mr-2 h-5 w-5" />
@@ -210,4 +213,4 @@ export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, la
       )}
     </form>
   );
-}
+};

@@ -9,6 +9,7 @@ import { GuessInput } from '@/components/nepal-traversal/GuessInput';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { GuessHistoryPanel } from '@/components/nepal-traversal/GuessHistoryPanel';
 
 export default function NepalTraversalPage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
@@ -17,6 +18,7 @@ export default function NepalTraversalPage() {
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [latestGuessResult, setLatestGuessResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [guessHistory, setGuessHistory] = useState<string[][]>([]);
 
   const { toast } = useToast();
 
@@ -62,9 +64,13 @@ export default function NepalTraversalPage() {
       } else {
         setLatestGuessResult({ type: 'error', message: 'That is not the shortest path. Try again!' });
       }
+
+      // Add the guess to guessHistory
+      setGuessHistory(prev => [...prev, intermediateDistricts]);
+
       setIsSubmittingGuess(false);
     },
-    [puzzle, submittedGuesses, toast]
+    [puzzle, submittedGuesses, toast, guessHistory]
   );
   
   if (!puzzle || !currentDate) {
@@ -106,6 +112,13 @@ export default function NepalTraversalPage() {
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
             latestGuessResult={latestGuessResult}
+          />
+          {/* Guess history panel */}
+          <GuessHistoryPanel 
+            guessHistory={guessHistory}
+            startDistrict={puzzle.startDistrict}
+            endDistrict={puzzle.endDistrict}
+            correctPath={puzzle.shortestPath}
           />
           <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
           </Card>
