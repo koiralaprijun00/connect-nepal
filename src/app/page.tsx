@@ -94,37 +94,28 @@ export default function NepalTraversalPage() {
     <div className="max-w-4xl mx-auto flex flex-col gap-4 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
       <CombinedHeaderPuzzle startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
 
-      <div className="grid md:grid-cols-2 gap-4">
-        {/* Left Column */}
-        <div className="flex flex-col gap-4">
-          <MapDisplay 
-            guessedPath={currentPathForHint} 
-            correctPath={puzzle.shortestPath}
-            startDistrict={puzzle.startDistrict}
-            endDistrict={puzzle.endDistrict}
-          />
-        </div>
-        {/* Right Column */}
-        <div className="flex flex-col gap-4">
-          <GuessInput 
-            onSubmit={handleGuessSubmit} 
-            isLoading={isSubmittingGuess}
-            startDistrict={puzzle.startDistrict}
-            endDistrict={puzzle.endDistrict}
-            latestGuessResult={latestGuessResult}
-          />
-          {/* Guess history panel */}
-          <GuessHistoryPanel 
-            guessHistory={guessHistory}
-            startDistrict={puzzle.startDistrict}
-            endDistrict={puzzle.endDistrict}
-            correctPath={puzzle.shortestPath}
-          />
-          <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
-          </Card>
-        </div>
-      </div>
-      
+      {/* Single column layout: stack all components vertically */}
+      <MapDisplay 
+        guessedPath={currentPathForHint} 
+        correctPath={puzzle.shortestPath}
+        startDistrict={puzzle.startDistrict}
+        endDistrict={puzzle.endDistrict}
+      />
+      <GuessInput 
+        onSubmit={handleGuessSubmit} 
+        isLoading={isSubmittingGuess}
+        startDistrict={puzzle.startDistrict}
+        endDistrict={puzzle.endDistrict}
+        latestGuessResult={latestGuessResult}
+      />
+      <GuessHistoryPanel 
+        guessHistory={guessHistory}
+        startDistrict={puzzle.startDistrict}
+        endDistrict={puzzle.endDistrict}
+        correctPath={puzzle.shortestPath}
+      />
+      <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
+      </Card>
       <footer className="text-center py-2 text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} Nepal Traversal. Puzzle changes daily.</p>
       </footer>
