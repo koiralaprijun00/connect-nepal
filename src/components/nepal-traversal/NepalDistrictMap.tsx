@@ -100,11 +100,7 @@ export function NepalDistrictMap({
     data-ai-hint="Nepal map districts"
     {...rest}
   >
-      {/* 
-        Replace the 'd' attribute content for each path with your actual SVG path data.
-        Ensure the 'id' of each <g> tag matches the district name used in your game logic.
-        Adjust the main 'viewBox' attribute of this <svg> element above to fit all your districts.
-      */}
+     
          <g id="Achham">
   	<path id="achham" className="district" d="M153.4,198.5c0.7,0.3,1.1,1.3,1.7,1.7c0.7,0.5,1.7,0.6,2.6,0.9c0.8,0.3,4.5,2.2,2.6,3.4
   		c0.4,0.6,1.3,2.5,1.2,2.6c1.2-0.2,3.4-1.6,3.4-1.6c0.8-1.1,1.2,0.1,1.9,0.7c0.1-0.1,0.1-0.2,0.3-0.3c0.1,1.1,1.7,3.5,2.4,3.2
