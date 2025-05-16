@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect, useCallback } from 'react';
 import type { Puzzle, SubmittedGuess, HintType as AppHintType } from '@/types';
@@ -12,6 +11,7 @@ import { GuessList } from '@/components/nepal-traversal/GuessList';
 import { HintSystem } from '@/components/nepal-traversal/HintSystem';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 
 export default function NepalTraversalPage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
@@ -94,16 +94,16 @@ export default function NepalTraversalPage() {
   
   if (!puzzle || !currentDate) {
     return (
-      <div className="max-w-lg mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen animate-pulse">
-        <Skeleton className="h-20 w-full rounded-lg mb-4" /> {/* CombinedHeaderPuzzle */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-6">
-            <Skeleton className="h-64 w-full rounded-lg" /> {/* MapDisplay */}
-            <Skeleton className="h-40 w-full rounded-lg" /> {/* GuessInput */}
+      <div className="max-w-4xl mx-auto flex flex-col gap-4 p-4 md:p-6 min-h-screen animate-pulse">
+        <Skeleton className="h-20 w-full rounded-lg mb-4" />
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-64 w-full rounded-lg" />
+            <Skeleton className="h-40 w-full rounded-lg" />
           </div>
-          <div className="flex flex-col gap-6">
-            <Skeleton className="h-48 w-full rounded-lg" /> {/* HintSystem */}
-            <Skeleton className="h-40 w-full rounded-lg" /> {/* GuessList */}
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-48 w-full rounded-lg" />
+            <Skeleton className="h-40 w-full rounded-lg" />
           </div>
         </div>
       </div>
@@ -111,12 +111,12 @@ export default function NepalTraversalPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto flex flex-col gap-6 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
+    <div className="max-w-4xl mx-auto flex flex-col gap-4 p-4 md:p-6 min-h-screen bg-background selection:bg-primary/20">
       <CombinedHeaderPuzzle startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4">
         {/* Left Column */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           <MapDisplay 
             guessedPath={currentPathForHint} 
             correctPath={puzzle.shortestPath}
@@ -126,7 +126,7 @@ export default function NepalTraversalPage() {
           <GuessInput onSubmit={handleGuessSubmit} isLoading={isSubmittingGuess} />
         </div>
         {/* Right Column */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           <HintSystem
             onHintRequest={handleHintRequest}
             hint={aiHint?.hint}
@@ -135,11 +135,13 @@ export default function NepalTraversalPage() {
             currentGuess={currentPathForHint}
             shortestPath={puzzle.shortestPath}
           />
-          <GuessList guesses={submittedGuesses} />
+          <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
+            <GuessList guesses={submittedGuesses} />
+          </Card>
         </div>
       </div>
       
-      <footer className="text-center py-4 text-sm text-muted-foreground">
+      <footer className="text-center py-2 text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} Nepal Traversal. Puzzle changes daily.</p>
       </footer>
     </div>
