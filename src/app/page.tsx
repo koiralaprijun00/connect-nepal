@@ -16,6 +16,7 @@ export default function NepalTraversalPage() {
   const [submittedGuesses, setSubmittedGuesses] = useState<SubmittedGuess[]>([]);
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const [latestGuessResult, setLatestGuessResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { toast } = useToast();
 
@@ -57,6 +58,9 @@ export default function NepalTraversalPage() {
 
       if (score === 100) {
         toast({ title: "Congratulations!", description: feedback, variant: "default", duration: 5000 });
+        setLatestGuessResult({ type: 'success', message: 'Congratulations! You found the shortest path!' });
+      } else {
+        setLatestGuessResult({ type: 'error', message: 'That is not the shortest path. Try again!' });
       }
       setIsSubmittingGuess(false);
     },
@@ -101,6 +105,7 @@ export default function NepalTraversalPage() {
             isLoading={isSubmittingGuess}
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
+            latestGuessResult={latestGuessResult}
           />
           <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
           </Card>

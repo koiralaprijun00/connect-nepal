@@ -35,9 +35,10 @@ interface GuessInputProps {
   isLoading: boolean;
   startDistrict: string;
   endDistrict: string;
+  latestGuessResult?: { type: 'success' | 'error'; message: string } | null;
 }
 
-export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict }: GuessInputProps) {
+export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, latestGuessResult }: GuessInputProps) {
   const [intermediateDistricts, setIntermediateDistricts] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -132,6 +133,24 @@ export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict }: 
     <form onSubmit={handleFormSubmit} className="space-y-6">
       <div>
         <div className="text-lg font-medium mb-2">District Sequence</div>
+        {/* Chips for selected intermediate districts */}
+        {intermediateDistricts.length > 0 && (
+          <div className="flex items-center flex-wrap gap-2 mb-2 overflow-x-auto">
+            {intermediateDistricts.map((district, idx) => (
+              <span key={district + idx} className="flex items-center px-2 py-1 rounded bg-blue-100 text-blue-800 font-semibold">
+                {district}
+                <button
+                  type="button"
+                  className="ml-1 text-xs text-red-500 hover:text-red-700"
+                  onClick={() => handleRemoveDistrict(idx)}
+                  aria-label={`Remove ${district}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild>
             <Input
@@ -178,6 +197,17 @@ export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict }: 
         <Send className="mr-2 h-5 w-5" />
         {isLoading ? "Submitting..." : "Submit Guess"}
       </Button>
+      {latestGuessResult && (
+        <div
+          className={`mt-4 p-4 rounded-lg border shadow-sm text-base font-medium ${
+            latestGuessResult.type === 'success'
+              ? 'bg-green-100 border-green-400 text-green-800'
+              : 'bg-red-100 border-red-400 text-red-800'
+          }`}
+        >
+          {latestGuessResult.message}
+        </div>
+      )}
     </form>
   );
 }
