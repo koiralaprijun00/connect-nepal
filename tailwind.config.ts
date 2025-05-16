@@ -73,25 +73,32 @@ export default {
   		},
   		keyframes: {
   			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
+  				from: { height: '0' },
+  				to: { height: 'var(--radix-accordion-content-height)' }
   			},
   			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
+  				from: { height: 'var(--radix-accordion-content-height)' },
+  				to: { height: '0' }
+  			},
+  			// Add a custom gradient animation inspired by the logo
+  			'gradient-shift': {
+  				'0%, 100%': { 
+  					'background-position': '0% 50%'
   				},
-  				to: {
-  					height: '0'
+  				'50%': { 
+  					'background-position': '100% 50%'
   				}
   			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			// Add a subtle gradient animation
+  			'gradient-shift': 'gradient-shift 15s ease infinite'
+  		},
+  		backgroundImage: {
+  			// Create a gradient similar to the logo's background
+  			'logo-gradient': 'linear-gradient(45deg, hsl(10, 90%, 55%), hsl(42, 100%, 56%), hsl(330, 70%, 60%))',
   		}
   	}
   },
