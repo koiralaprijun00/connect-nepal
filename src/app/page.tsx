@@ -16,7 +16,6 @@ export default function NepalTraversalPage() {
   const [submittedGuesses, setSubmittedGuesses] = useState<SubmittedGuess[]>([]);
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
-  const [latestFeedback, setLatestFeedback] = useState<{score: number, feedback: string} | null>(null);
 
   const { toast } = useToast();
 
@@ -55,7 +54,6 @@ export default function NepalTraversalPage() {
       };
       setSubmittedGuesses(prev => [newGuess, ...prev]);
       setCurrentPathForHint(fullPath); // Update path for map display
-      setLatestFeedback({ score, feedback });
 
       if (score === 100) {
         toast({ title: "Congratulations!", description: feedback, variant: "default", duration: 5000 });
@@ -103,7 +101,6 @@ export default function NepalTraversalPage() {
             isLoading={isSubmittingGuess}
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
-            latestFeedback={latestFeedback}
           />
           <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
           </Card>

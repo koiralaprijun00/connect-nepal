@@ -35,10 +35,9 @@ interface GuessInputProps {
   isLoading: boolean;
   startDistrict: string;
   endDistrict: string;
-  latestFeedback?: { score: number; feedback: string } | null;
 }
 
-export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, latestFeedback }: GuessInputProps) {
+export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict }: GuessInputProps) {
   const [intermediateDistricts, setIntermediateDistricts] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -179,12 +178,6 @@ export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, la
         <Send className="mr-2 h-5 w-5" />
         {isLoading ? "Submitting..." : "Submit Guess"}
       </Button>
-      {latestFeedback && (
-        <div className="mt-4 p-4 rounded-lg border bg-muted text-muted-foreground">
-          <div className="font-semibold mb-1">Guess Submitted: {latestFeedback.score}%</div>
-          <div>{latestFeedback.feedback}</div>
-        </div>
-      )}
     </form>
   );
 }
