@@ -8,14 +8,14 @@ interface CombinedHeaderPuzzleProps {
 
 export function CombinedHeaderPuzzle({ startDistrict, endDistrict }: CombinedHeaderPuzzleProps) {
   return (
-    <div className="relative overflow-hidden text-center py-4 border-b border-border mb-4 bg-gradient-to-tr from-primary/20 via-secondary/20 to-accent/20">
+    <div className="relative overflow-hidden py-4 mb-4">
       {/* Animated gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-secondary/10 to-accent/10 opacity-50 animate-gradient-shift"></div>
+      <div className="absolute"></div>
       
       {/* Content container */}
-      <div className="relative z-10 max-w-2xl mx-auto px-4">
+      <div className="relative z-10 max-w-2xl">
         {/* Title section */}
-        <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="flex items-start justify-start gap-2 mb-2">
           <Mountain className="h-7 w-7 text-primary" />
           <h1 className="text-2xl font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent tracking-tight">
             Nepal Traversal
@@ -27,20 +27,12 @@ export function CombinedHeaderPuzzle({ startDistrict, endDistrict }: CombinedHea
           Discover the shortest path through the majestic districts of Nepal!
         </p>
 
-        {/* Start and End points */}
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center justify-center gap-2 bg-background/50 rounded-lg p-2 shadow-sm">
-            <MapPin className="h-4 w-4 text-primary" />
-            <p className="text-foreground">
-              Start: <span className="font-medium text-primary">{startDistrict}</span>
-            </p>
-          </div>
-          <div className="flex items-center justify-center gap-2 bg-background/50 rounded-lg p-2 shadow-sm">
-            <MapPin className="h-4 w-4 text-destructive" />
-            <p className="text-foreground">
-              End: <span className="font-medium text-destructive">{endDistrict}</span>
-            </p>
-          </div>
+        {/* Travel path */}
+        <div className="flex items-center justify-start gap-2">
+          <MapPin className="h-5 w-5 text-primary" />
+          <p className="text-foreground text-base">
+            Travel from <span className="font-medium text-primary text-lg">{startDistrict}</span> to <span className="font-medium text-destructive text-lg">{endDistrict}</span> district
+          </p>
         </div>
       </div>
     </div>
