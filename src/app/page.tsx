@@ -1,14 +1,12 @@
 "use client";
 import { useState, useEffect, useCallback } from 'react';
-import type { Puzzle, SubmittedGuess, HintType as AppHintType } from '@/types';
-import { generateHint, type HintGeneratorInput, type HintGeneratorOutput } from '@/ai/flows/hint-generator';
+import type { Puzzle, SubmittedGuess } from '@/types';
 import { getDailyPuzzle, calculateScore, parseGuessInput } from '@/lib/puzzle';
 
 import { CombinedHeaderPuzzle } from '@/components/nepal-traversal/CombinedHeaderPuzzle';
 import { MapDisplay } from '@/components/nepal-traversal/MapDisplay';
 import { GuessInput } from '@/components/nepal-traversal/GuessInput';
 import { GuessList } from '@/components/nepal-traversal/GuessList';
-import { HintSystem } from '@/components/nepal-traversal/HintSystem';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -17,8 +15,6 @@ export default function NepalTraversalPage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [currentPathForHint, setCurrentPathForHint] = useState<string[]>([]);
   const [submittedGuesses, setSubmittedGuesses] = useState<SubmittedGuess[]>([]);
-  const [aiHint, setAiHint] = useState<HintGeneratorOutput | null>(null);
-  const [isHintLoading, setIsHintLoading] = useState(false);
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
@@ -33,7 +29,6 @@ export default function NepalTraversalPage() {
       const dailyPuzzle = getDailyPuzzle(currentDate);
       setPuzzle(dailyPuzzle);
       setSubmittedGuesses([]);
-      setAiHint(null);
       setCurrentPathForHint(dailyPuzzle.shortestPath.length > 0 ? [dailyPuzzle.shortestPath[0]] : []);
     }
   }, [currentDate]);
@@ -68,29 +63,6 @@ export default function NepalTraversalPage() {
     }
     setIsSubmittingGuess(false);
   }, [puzzle, submittedGuesses, toast]);
-
-  const handleHintRequest = useCallback(async (hintType?: AppHintType) => {
-    if (!puzzle) return;
-    setIsHintLoading(true);
-    setAiHint(null);
-
-    try {
-      const hintInput: HintGeneratorInput = {
-        currentGuess: currentPathForHint, // Use currentPathForHint which reflects the latest guess for map
-        shortestPath: puzzle.shortestPath,
-        hintType: hintType,
-      };
-      const hintResult = await generateHint(hintInput);
-      setAiHint(hintResult);
-      toast({ title: "Hint Generated!", description: `AI provided a ${hintResult.hintType.toLowerCase().replace(/_/g, " ")} hint.`, variant: "default" });
-    } catch (error) {
-      console.error("Error generating hint:", error);
-      toast({ title: "Hint Error", description: "Could not generate a hint at this time.", variant: "destructive" });
-      setAiHint(null);
-    } finally {
-      setIsHintLoading(false);
-    }
-  }, [puzzle, currentPathForHint, toast]);
   
   if (!puzzle || !currentDate) {
     return (
@@ -102,7 +74,6 @@ export default function NepalTraversalPage() {
             <Skeleton className="h-40 w-full rounded-lg" />
           </div>
           <div className="flex flex-col gap-4">
-            <Skeleton className="h-48 w-full rounded-lg" />
             <Skeleton className="h-40 w-full rounded-lg" />
           </div>
         </div>
@@ -123,18 +94,10 @@ export default function NepalTraversalPage() {
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
           />
-          <GuessInput onSubmit={handleGuessSubmit} isLoading={isSubmittingGuess} />
         </div>
         {/* Right Column */}
         <div className="flex flex-col gap-4">
-          <HintSystem
-            onHintRequest={handleHintRequest}
-            hint={aiHint?.hint}
-            hintType={aiHint?.hintType}
-            isLoading={isHintLoading}
-            currentGuess={currentPathForHint}
-            shortestPath={puzzle.shortestPath}
-          />
+          <GuessInput onSubmit={handleGuessSubmit} isLoading={isSubmittingGuess} />
           <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
             <GuessList guesses={submittedGuesses} />
           </Card>
