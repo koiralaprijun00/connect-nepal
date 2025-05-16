@@ -31,209 +31,160 @@ const guessSchema = z.object({
 type GuessFormValues = z.infer<typeof guessSchema>;
 
 interface GuessInputProps {
-  onSubmit: (guess: string) => void;
+  onSubmit: (intermediateDistricts: string[]) => void;
   isLoading: boolean;
+  startDistrict: string;
+  endDistrict: string;
+  latestFeedback?: { score: number; feedback: string } | null;
 }
 
-export function GuessInput({ onSubmit, isLoading }: GuessInputProps) {
-  const form = useForm<GuessFormValues>({
-    resolver: zodResolver(guessSchema),
-    defaultValues: { guess: "" },
-  });
-
+export function GuessInput({ onSubmit, isLoading, startDistrict, endDistrict, latestFeedback }: GuessInputProps) {
+  const [intermediateDistricts, setIntermediateDistricts] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Watch current input
-  const currentGuessValue = form.watch("guess");
-
-  // Extract term after last comma for filtering suggestions
-  const filterTerm = useMemo(() => {
-    const lastCommaIdx = currentGuessValue.lastIndexOf(",");
-    return lastCommaIdx === -1
-      ? currentGuessValue.trim()
-      : currentGuessValue.substring(lastCommaIdx + 1).trim();
-  }, [currentGuessValue]);
-
-  // Filter districts for autocomplete suggestions
+  // Filter districts for autocomplete suggestions, excluding already selected and start/end
   const filteredDistricts = useMemo(() => {
-    if (!filterTerm) return DISTRICTS_NEPAL;
-    return DISTRICTS_NEPAL.filter((district) =>
-      district.toLowerCase().includes(filterTerm.toLowerCase())
+    const exclude = [startDistrict, endDistrict, ...intermediateDistricts].map(d => d.toLowerCase());
+    return DISTRICTS_NEPAL.filter(
+      (district) =>
+        !exclude.includes(district.toLowerCase()) &&
+        district.toLowerCase().includes(inputValue.trim().toLowerCase())
     );
-  }, [filterTerm]);
+  }, [inputValue, intermediateDistricts, startDistrict, endDistrict]);
 
-  // Select district from suggestions
   function handleDistrictSelect(selectedDistrict: string) {
-    const currentVal = form.getValues("guess");
-    const lastCommaIndex = currentVal.lastIndexOf(",");
-
-    let newValue;
-    if (lastCommaIndex === -1) {
-      newValue = selectedDistrict;
-    } else {
-      const before = currentVal.substring(0, lastCommaIndex + 1);
-      newValue = `${before} ${selectedDistrict}`;
-    }
-
-    form.setValue("guess", newValue.trim(), {
-      shouldValidate: true,
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-
-    // Close the popover in the next event loop
-    setTimeout(() => {
-      setPopoverOpen(false);
-      setHighlightedIndex(null);
-    }, 0);
-
-    inputRef.current?.focus();
+    setIntermediateDistricts((prev) => [...prev, selectedDistrict]);
+    setInputValue("");
+    setPopoverOpen(false);
+    setHighlightedIndex(null);
+    setTimeout(() => inputRef.current?.focus(), 0);
   }
 
-  // Submit handler
-  function handleFormSubmit(data: GuessFormValues) {
-    const cleanedGuess = data.guess.replace(/,\s*$/, "").trim();
-    onSubmit(cleanedGuess);
-    form.reset();
+  function handleRemoveDistrict(index: number) {
+    setIntermediateDistricts((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit(intermediateDistricts);
+    setIntermediateDistricts([]);
+    setInputValue("");
     setPopoverOpen(false);
     setHighlightedIndex(null);
   }
 
-  // Keyboard navigation and shortcuts
+  // Keyboard navigation for popover
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!popoverOpen) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        form.handleSubmit(handleFormSubmit)();
+    if (popoverOpen && filteredDistricts.length > 0) {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setHighlightedIndex((old) =>
+            old === null || old === filteredDistricts.length - 1 ? 0 : old + 1
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setHighlightedIndex((old) =>
+            old === null || old === 0 ? filteredDistricts.length - 1 : old - 1
+          );
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (highlightedIndex !== null && filteredDistricts[highlightedIndex]) {
+            handleDistrictSelect(filteredDistricts[highlightedIndex]);
+          } else if (inputValue.trim() && filteredDistricts.length > 0) {
+            handleDistrictSelect(filteredDistricts[0]);
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          setPopoverOpen(false);
+          setHighlightedIndex(null);
+          break;
+        default:
+          break;
       }
-      return;
-    }
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setHighlightedIndex((old) =>
-          old === null || old === filteredDistricts.length - 1 ? 0 : old + 1
-        );
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setHighlightedIndex((old) =>
-          old === null || old === 0 ? filteredDistricts.length - 1 : old - 1
-        );
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (highlightedIndex !== null) {
-          handleDistrictSelect(filteredDistricts[highlightedIndex]);
-        } else {
-          // If no suggestion highlighted, submit form
-          form.handleSubmit(handleFormSubmit)();
-        }
-        break;
-      case "Escape":
-        e.preventDefault();
-        setPopoverOpen(false);
-        setHighlightedIndex(null);
-        break;
-      default:
-        break;
+    } else if (e.key === "Enter" && inputValue.trim() === "") {
+      e.preventDefault();
+      handleFormSubmit(e as any);
     }
   };
 
-  // Auto open/close popover based on filter term and loading state
+  // Open popover when input is focused or typing and there are suggestions
   useEffect(() => {
     if (isLoading) {
       setPopoverOpen(false);
       setHighlightedIndex(null);
-    } else if (filterTerm.trim() !== "") {
+      return;
+    }
+    if (document.activeElement === inputRef.current && inputValue.trim() && filteredDistricts.length > 0) {
       setPopoverOpen(true);
-    } else {
+    } else if (!inputValue.trim()) {
       setPopoverOpen(false);
       setHighlightedIndex(null);
     }
-  }, [filterTerm, isLoading]);
-
-  const handleInputFocus = () => {
-    // Open popover only if there is a filter term (user has typed)
-    if (filterTerm.trim() !== "") {
-      setPopoverOpen(true);
-    }
-  };
+  }, [inputValue, isLoading, filteredDistricts.length]);
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="guess"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="guess-input" className="text-lg">
-                District Sequence
-              </FormLabel>
-              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      id="guess-input"
-                      placeholder="e.g., Kathmandu, Bhaktapur, Kavre"
-                      type="text"
-                      ref={inputRef}
-                      autoComplete="off"
-                      onKeyDown={handleKeyDown}
-                      className="text-base"
-                      onFocus={handleInputFocus}
-                      onChange={(e) => {
-                        field.onChange(e);
-                      }}
-                    />
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="p-2 w-[var(--radix-popper-anchor-width)]"
-                  onOpenAutoFocus={(e) => e.preventDefault()}
-                >
-                  <ScrollArea className={`rounded-md border ${filteredDistricts.length > 0 ? 'max-h-[200px]' : ''}`}>
-                    {filteredDistricts.length === 0 ? (
-                      <p className="p-3 text-sm text-center text-muted-foreground">
-                        No matching districts.
-                      </p>
-                    ) : (
-                      <div className="p-1">
-                        {filteredDistricts.map((district, index) => (
-                          <div
-                            key={district}
-                            onClick={() => handleDistrictSelect(district)}
-                            className={`text-sm p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground ${
-                              highlightedIndex === index ? "bg-accent text-accent-foreground" : ""
-                            }`}
-                          >
-                            {district}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
-              <FormDescription>
-                Type district names separated by commas. You can select from suggestions or type your complete
-                answer directly. Use arrow keys to navigate suggestions and Enter to select or submit.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="w-full text-lg" disabled={isLoading}>
-          <Send className="mr-2 h-5 w-5" />
-          {isLoading ? "Submitting..." : "Submit Guess"}
-        </Button>
-      </form>
-    </Form>
+    <form onSubmit={handleFormSubmit} className="space-y-6">
+      <div>
+        <div className="text-lg font-medium mb-2">District Sequence</div>
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Input
+              ref={inputRef}
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              onFocus={() => {
+                if (inputValue.trim() && filteredDistricts.length > 0) setPopoverOpen(true);
+              }}
+              onBlur={() => setTimeout(() => setPopoverOpen(false), 150)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a district and press Enter or select"
+              disabled={isLoading}
+              className="text-base"
+              autoComplete="off"
+            />
+          </PopoverTrigger>
+          <PopoverContent className="p-2 w-[var(--radix-popper-anchor-width)] max-h-60 overflow-y-auto" onOpenAutoFocus={e => e.preventDefault()}>
+            <ScrollArea className="rounded-md border max-h-52 overflow-y-auto">
+              {filteredDistricts.length === 0 ? (
+                <p className="p-3 text-sm text-center text-muted-foreground">
+                  No matching districts.
+                </p>
+              ) : (
+                <div className="p-1">
+                  {filteredDistricts.map((district, index) => (
+                    <div
+                      key={district}
+                      onClick={() => handleDistrictSelect(district)}
+                      className={`text-sm p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground ${
+                        highlightedIndex === index ? "bg-accent text-accent-foreground" : ""
+                      }`}
+                    >
+                      {district}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </PopoverContent>
+        </Popover>
+      </div>
+      <Button type="submit" className="w-full text-lg" disabled={isLoading || intermediateDistricts.length === 0}>
+        <Send className="mr-2 h-5 w-5" />
+        {isLoading ? "Submitting..." : "Submit Guess"}
+      </Button>
+      {latestFeedback && (
+        <div className="mt-4 p-4 rounded-lg border bg-muted text-muted-foreground">
+          <div className="font-semibold mb-1">Guess Submitted: {latestFeedback.score}%</div>
+          <div>{latestFeedback.feedback}</div>
+        </div>
+      )}
+    </form>
   );
 }
