@@ -18,16 +18,15 @@ interface GuessInputProps {
   startDistrict: string;
   endDistrict: string;
   latestGuessResult?: { type: 'success' | 'error'; message: string } | null;
+  isGameWon: boolean;
 }
 
-export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, startDistrict, endDistrict, latestGuessResult }) => {
+export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, startDistrict, endDistrict, latestGuessResult, isGameWon }) => {
   const [guessDistrict, setGuessDistrict] = useState<string>("");
   const [popoverOpen, setPopoverOpen] = useState<boolean>(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const isGameWon = latestGuessResult?.type === 'success';
 
   // Filter districts for autocomplete suggestions, excluding start/end
   const filteredDistricts: string[] = useMemo(() => {

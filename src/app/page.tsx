@@ -31,36 +31,39 @@ export default function NepalTraversalPage() {
     startNewGame();
   }, []);
 
+  const correctPath: string[] = puzzle ? puzzle.shortestPath.slice(1, -1) : [];
+  const normalize = (arr: string[]): string[] => arr.map((d: string) => d.trim().toLowerCase()).sort();
+  const requiredSet = new Set(correctPath.map(d => d.trim().toLowerCase()));
+  const correctGuessesSet = new Set(userPath.filter(d => requiredSet.has(d.trim().toLowerCase())).map(d => d.trim().toLowerCase()));
+  const isGameWon = correctGuessesSet.size === requiredSet.size;
+
+  useEffect(() => {
+    if (isGameWon) {
+      setLatestGuessResult({ type: 'success', message: 'Congratulations! You found the shortest path!' });
+    }
+  }, [isGameWon]);
+
   const handleGuessSubmit = useCallback(
     async ([district]: string[]) => {
       if (!puzzle) return;
       setIsSubmittingGuess(true);
 
-      const correctPath = puzzle.shortestPath.slice(1, -1); // intermediate districts
-      const nextIndex = userPath.length;
-      const nextCorrect = correctPath[nextIndex];
-
-      if (district.trim().toLowerCase() === nextCorrect.trim().toLowerCase()) {
-        const newPath = [...userPath, district];
-        setUserPath(newPath);
-        setGuessHistory(prev => [...prev, [district]]);
-        if (newPath.length === correctPath.length) {
-          const isFullPathCorrect = newPath.every((d, i) => d.trim().toLowerCase() === correctPath[i].trim().toLowerCase());
-          if (isFullPathCorrect) {
-            setLatestGuessResult({ type: 'success', message: 'Congratulations! You found the shortest path!' });
-          } else {
-            setLatestGuessResult({ type: 'error', message: 'Path is not correct. Try again!' });
-          }
-        } else {
-          setLatestGuessResult({ type: 'success', message: `Correct! Keep going (${newPath.length}/${correctPath.length})` });
-        }
-      } else {
-        setLatestGuessResult({ type: 'error', message: `Incorrect. The next district should be '${nextCorrect}'.` });
+      if (userPath.includes(district.trim())) {
+        setLatestGuessResult({ type: 'error', message: `You already entered '${district.trim()}'. Try a different district.` });
+        setIsSubmittingGuess(false);
+        return;
       }
-
+      const newPath = [...userPath, district.trim()];
+      setUserPath(newPath);
+      setGuessHistory(prev => [...prev, [district.trim()]]);
+      // Recalculate correct guesses set
+      const newCorrectGuessesSet = new Set(newPath.filter(d => requiredSet.has(d.trim().toLowerCase())).map(d => d.trim().toLowerCase()));
+      if (!isGameWon) {
+        setLatestGuessResult({ type: 'success', message: `Correct! Keep going (${newCorrectGuessesSet.size}/${requiredSet.size})` });
+      }
       setIsSubmittingGuess(false);
     },
-    [puzzle, userPath]
+    [puzzle, userPath, requiredSet, isGameWon]
   );
   
   if (!puzzle) {
@@ -109,6 +112,7 @@ export default function NepalTraversalPage() {
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
             latestGuessResult={latestGuessResult}
+            isGameWon={isGameWon}
           />
           <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
           </Card>
