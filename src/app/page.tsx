@@ -37,17 +37,30 @@ export default function NepalTraversalPage() {
   const correctGuessesSet = new Set(userPath.filter(d => requiredSet.has(d.trim().toLowerCase())).map(d => d.trim().toLowerCase()));
   const isGameWon = correctGuessesSet.size === requiredSet.size;
 
+  // Robust win logic: user wins as soon as all required districts are present in their guesses
+  const required = correctPath.map(d => d.trim().toLowerCase());
+  const correctGuesses = userPath.filter(d => required.includes(d.trim().toLowerCase()));
+  const isGameWonRobust = required.every(d => correctGuesses.map(x => x.trim().toLowerCase()).includes(d));
+
   useEffect(() => {
-    if (isGameWon) {
+    if (isGameWonRobust && userPath.length > 0) {
       setLatestGuessResult({ type: 'success', message: 'Congratulations! You found the shortest path!' });
     }
-  }, [isGameWon]);
+  }, [isGameWonRobust, userPath.length]);
+
+  useEffect(() => {
+    if (!latestGuessResult) return;
+    if (latestGuessResult.type === 'success' && isGameWonRobust) return; // Keep win message
+    const timeout = setTimeout(() => setLatestGuessResult(null), 3000);
+    return () => clearTimeout(timeout);
+  }, [latestGuessResult, isGameWonRobust]);
 
   const handleGuessSubmit = useCallback(
     async ([district]: string[]) => {
       if (!puzzle) return;
       setIsSubmittingGuess(true);
 
+      const normalizedGuess = district.trim().toLowerCase();
       if (userPath.includes(district.trim())) {
         setLatestGuessResult({ type: 'error', message: `You already entered '${district.trim()}'. Try a different district.` });
         setIsSubmittingGuess(false);
@@ -56,14 +69,16 @@ export default function NepalTraversalPage() {
       const newPath = [...userPath, district.trim()];
       setUserPath(newPath);
       setGuessHistory(prev => [...prev, [district.trim()]]);
-      // Recalculate correct guesses set
-      const newCorrectGuessesSet = new Set(newPath.filter(d => requiredSet.has(d.trim().toLowerCase())).map(d => d.trim().toLowerCase()));
-      if (!isGameWon) {
-        setLatestGuessResult({ type: 'success', message: `Correct! Keep going (${newCorrectGuessesSet.size}/${requiredSet.size})` });
+      const isCorrect = required.includes(normalizedGuess);
+      const newCorrectGuesses = newPath.filter(d => required.includes(d.trim().toLowerCase()));
+      if (!isCorrect) {
+        setLatestGuessResult({ type: 'error', message: 'Incorrect. Try again!' });
+      } else if (!isGameWonRobust) {
+        setLatestGuessResult({ type: 'success', message: `Correct! Keep going (${newCorrectGuesses.length}/${required.length})` });
       }
       setIsSubmittingGuess(false);
     },
-    [puzzle, userPath, requiredSet, isGameWon]
+    [puzzle, userPath, required, isGameWonRobust]
   );
   
   if (!puzzle) {
@@ -112,7 +127,7 @@ export default function NepalTraversalPage() {
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
             latestGuessResult={latestGuessResult}
-            isGameWon={isGameWon}
+            isGameWon={isGameWonRobust}
           />
           <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
           </Card>
@@ -125,6 +140,22 @@ export default function NepalTraversalPage() {
             endDistrict={puzzle.endDistrict}
             correctPath={puzzle.shortestPath}
           />
+          {latestGuessResult?.message && (
+            <div
+              className={`mt-4 mb-2 p-3 rounded-lg border flex items-center gap-2 ${
+                latestGuessResult.type === 'success'
+                  ? 'bg-green-100 border-green-200 text-green-800'
+                  : 'bg-red-100 border-red-200 text-red-800'
+              }`}
+            >
+              {latestGuessResult.type === 'success' ? (
+                <span role="img" aria-label="trophy">🏆</span>
+              ) : (
+                <span role="img" aria-label="cross">❌</span>
+              )}
+              <span className="font-medium">{latestGuessResult.message}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
