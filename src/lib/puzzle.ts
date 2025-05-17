@@ -21,50 +21,50 @@ const PUZZLES: Puzzle[] = [
   {
     id: 'puzzle_1',
     startDistrict: 'Kathmandu',
-    endDistrict: 'Kavrepalanchok',
-    shortestPath: ['Kathmandu', 'Bhaktapur', 'Kavrepalanchok'],
+    endDistrict: 'Dolpa',
+    shortestPath: ['Kathmandu', 'Nuwakot', 'Rasuwa', 'Gorkha', 'Baglung', 'Myagdi', 'Dolpa'],
   },
   {
     id: 'puzzle_2',
-    startDistrict: 'Lalitpur',
-    endDistrict: 'Nuwakot',
-    shortestPath: ['Lalitpur', 'Kathmandu', 'Nuwakot'],
+    startDistrict: 'Pokhara',
+    endDistrict: 'Taplejung',
+    shortestPath: ['Pokhara', 'Kaski', 'Lamjung', 'Gorkha', 'Dhading', 'Nuwakot', 'Taplejung'],
   },
   {
     id: 'puzzle_3',
-    startDistrict: 'Chitwan',
-    endDistrict: 'Dhading',
-    shortestPath: ['Chitwan', 'Makwanpur', 'Dhading'],
+    startDistrict: 'Biratnagar',
+    endDistrict: 'Dhangadhi',
+    shortestPath: ['Biratnagar', 'Morang', 'Sunsari', 'Dhankuta', 'Terhathum', 'Panchthar', 'Dhangadhi'],
   },
   {
     id: 'puzzle_4',
-    startDistrict: 'Rasuwa',
-    endDistrict: 'Sindhupalchok',
-    shortestPath: ['Rasuwa', 'Nuwakot', 'Sindhupalchok'],
+    startDistrict: 'Nepalgunj',
+    endDistrict: 'Ilam',
+    shortestPath: ['Nepalgunj', 'Banke', 'Dang', 'Pyuthan', 'Rolpa', 'Okhaldhunga', 'Ilam'],
   },
   {
     id: 'puzzle_5',
-    startDistrict: 'Pokhara',
-    endDistrict: 'Mustang',
-    shortestPath: ['Pokhara', 'Kaski', 'Mustang'],
+    startDistrict: 'Dharan',
+    endDistrict: 'Dadeldhura',
+    shortestPath: ['Dharan', 'Sunsari', 'Morang', 'Jhapa', 'Panchthar', 'Taplejung', 'Dadeldhura'],
   },
   {
     id: 'puzzle_6',
-    startDistrict: 'Biratnagar',
-    endDistrict: 'Ilam',
-    shortestPath: ['Biratnagar', 'Morang', 'Ilam'],
+    startDistrict: 'Butwal',
+    endDistrict: 'Jumla',
+    shortestPath: ['Butwal', 'Rupandehi', 'Nawalparasi', 'Tanahu', 'Gorkha', 'Lamjung', 'Jumla'],
   },
   {
     id: 'puzzle_7',
-    startDistrict: 'Nepalgunj',
-    endDistrict: 'Surkhet',
-    shortestPath: ['Nepalgunj', 'Banke', 'Surkhet'],
+    startDistrict: 'Bhairahawa',
+    endDistrict: 'Baitadi',
+    shortestPath: ['Bhairahawa', 'Rupandehi', 'Nawalparasi', 'Tanahu', 'Gorkha', 'Darchula', 'Baitadi'],
   },
   {
     id: 'puzzle_8',
-    startDistrict: 'Dharan',
-    endDistrict: 'Taplejung',
-    shortestPath: ['Dharan', 'Sunsari', 'Taplejung'],
+    startDistrict: 'Hetauda',
+    endDistrict: 'Bajura',
+    shortestPath: ['Hetauda', 'Makwanpur', 'Dhading', 'Nuwakot', 'Rasuwa', 'Humla', 'Bajura'],
   }
 ];
 
@@ -83,37 +83,28 @@ export function calculateScore(guessedPath: string[], shortestPath: string[]): {
     return { score: 0, feedback: "Invalid guess or path." };
   }
 
-  let correctInSequence = 0;
+  // Only compare to intermediate districts (exclude start and end)
+  const intermediatePath = shortestPath.slice(1, -1);
+
   for (let i = 0; i < guessedPath.length; i++) {
-    if (i < shortestPath.length) {
-      const guessedDistrict = guessedPath[i].trim().toLowerCase();
-      const correctDistrict = shortestPath[i].trim().toLowerCase();
-      if (guessedDistrict === correctDistrict) {
-        correctInSequence++;
-      } else {
-        // Incorrect district in sequence
-        const feedback = `Path correct up to '${shortestPath[i-1] || 'start'}'. '${guessedPath[i]}' is not the next correct district.`;
-        return { score: Math.round((correctInSequence / shortestPath.length) * 100), feedback };
-      }
-    } else {
-      // Guessed path is longer than shortest path but correct so far
-      const feedback = `Path is correct but longer than optimal. Optimal path has ${shortestPath.length} districts.`;
-      return { score: Math.round((correctInSequence / shortestPath.length) * 100), feedback };
+    const guessedDistrict = guessedPath[i].trim().toLowerCase();
+    const correctDistrict = intermediatePath[i]?.trim().toLowerCase();
+    if (guessedDistrict !== correctDistrict) {
+      return {
+        score: Math.round((i / intermediatePath.length) * 100),
+        feedback: `Incorrect path. The correct next district should be '${intermediatePath[i] || 'none'}'.`
+      };
     }
   }
 
-  if (correctInSequence === shortestPath.length && guessedPath.length === shortestPath.length) {
+  if (guessedPath.length === intermediatePath.length) {
     return { score: 100, feedback: "Congratulations! You found the shortest path!" };
+  } else {
+    return {
+      score: Math.round((guessedPath.length / intermediatePath.length) * 100),
+      feedback: `Correct so far! You've found ${guessedPath.length} of ${intermediatePath.length} districts.`
+    };
   }
-  
-  if (correctInSequence === guessedPath.length && guessedPath.length < shortestPath.length) {
-     const feedback = `Path is correct so far. Keep going! You've found ${correctInSequence} of ${shortestPath.length} districts.`;
-     return { score: Math.round((correctInSequence / shortestPath.length) * 100), feedback };
-  }
-
-  // Default if loop finishes without returning (e.g. guessed path is shorter but all correct)
-  const feedback = `Path correct up to the end of your guess. You've found ${correctInSequence} of ${shortestPath.length} districts.`;
-  return { score: Math.round((correctInSequence / shortestPath.length) * 100), feedback };
 }
 
 export function parseGuessInput(input: string): string[] {

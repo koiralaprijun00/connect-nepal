@@ -14,8 +14,7 @@ import { RefreshCw } from "lucide-react";
 
 export default function NepalTraversalPage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
-  const [currentPathForHint, setCurrentPathForHint] = useState<string[]>([]);
-  const [submittedGuesses, setSubmittedGuesses] = useState<SubmittedGuess[]>([]);
+  const [userPath, setUserPath] = useState<string[]>([]);
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
   const [latestGuessResult, setLatestGuessResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [guessHistory, setGuessHistory] = useState<string[][]>([]);
@@ -23,8 +22,7 @@ export default function NepalTraversalPage() {
   const startNewGame = useCallback(() => {
     const newPuzzle = getRandomPuzzle();
     setPuzzle(newPuzzle);
-    setSubmittedGuesses([]);
-    setCurrentPathForHint(newPuzzle.shortestPath.length > 0 ? [newPuzzle.shortestPath[0]] : []);
+    setUserPath([]);
     setGuessHistory([]);
     setLatestGuessResult(null);
   }, []);
@@ -34,40 +32,35 @@ export default function NepalTraversalPage() {
   }, []);
 
   const handleGuessSubmit = useCallback(
-    async (intermediateDistricts: string[]) => {
+    async ([district]: string[]) => {
       if (!puzzle) return;
       setIsSubmittingGuess(true);
 
-      // Build the full path: [start, ...intermediate, end]
-      const fullPath = [puzzle.startDistrict, ...intermediateDistricts, puzzle.endDistrict];
-      if (intermediateDistricts.some(d => !d)) {
-        setLatestGuessResult({ type: 'error', message: 'Please enter valid districts.' });
-        setIsSubmittingGuess(false);
-        return;
-      }
+      const correctPath = puzzle.shortestPath.slice(1, -1); // intermediate districts
+      const nextIndex = userPath.length;
+      const nextCorrect = correctPath[nextIndex];
 
-      const { score, feedback } = calculateScore(fullPath, puzzle.shortestPath);
-      const newGuess: SubmittedGuess = {
-        id: (submittedGuesses.length + 1).toString(),
-        path: fullPath,
-        score,
-        feedback,
-      };
-      setSubmittedGuesses(prev => [newGuess, ...prev]);
-      setCurrentPathForHint(fullPath); // Update path for map display
-
-      if (score === 100) {
-        setLatestGuessResult({ type: 'success', message: 'Congratulations! You found the shortest path!' });
+      if (district.trim().toLowerCase() === nextCorrect.trim().toLowerCase()) {
+        const newPath = [...userPath, district];
+        setUserPath(newPath);
+        setGuessHistory(prev => [...prev, [district]]);
+        if (newPath.length === correctPath.length) {
+          const isFullPathCorrect = newPath.every((d, i) => d.trim().toLowerCase() === correctPath[i].trim().toLowerCase());
+          if (isFullPathCorrect) {
+            setLatestGuessResult({ type: 'success', message: 'Congratulations! You found the shortest path!' });
+          } else {
+            setLatestGuessResult({ type: 'error', message: 'Path is not correct. Try again!' });
+          }
+        } else {
+          setLatestGuessResult({ type: 'success', message: `Correct! Keep going (${newPath.length}/${correctPath.length})` });
+        }
       } else {
-        setLatestGuessResult({ type: 'error', message: 'That is not the shortest path. Try again!' });
+        setLatestGuessResult({ type: 'error', message: `Incorrect. The next district should be '${nextCorrect}'.` });
       }
-
-      // Add the guess to guessHistory
-      setGuessHistory(prev => [...prev, intermediateDistricts]);
 
       setIsSubmittingGuess(false);
     },
-    [puzzle, submittedGuesses]
+    [puzzle, userPath]
   );
   
   if (!puzzle) {
@@ -105,7 +98,7 @@ export default function NepalTraversalPage() {
         {/* Left Column: Main game */}
         <div className="flex flex-col gap-4">
           <MapDisplay 
-            guessedPath={currentPathForHint} 
+            guessedPath={userPath} 
             correctPath={puzzle.shortestPath}
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}

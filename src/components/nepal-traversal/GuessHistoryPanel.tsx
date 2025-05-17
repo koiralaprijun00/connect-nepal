@@ -9,11 +9,11 @@ interface GuessHistoryPanelProps {
 }
 
 export function GuessHistoryPanel({ guessHistory, startDistrict, endDistrict, correctPath }: GuessHistoryPanelProps) {
-  const hasWon = guessHistory.some(guess => {
-    const fullPath = [startDistrict, ...guess, endDistrict];
-    return fullPath.length === correctPath.length &&
-      fullPath.every((d, i) => d.trim().toLowerCase() === correctPath[i].trim().toLowerCase());
-  });
+  // Reconstruct the user's full path so far
+  const userIntermediatePath = guessHistory.map(g => g[0]);
+  const userFullPath = [startDistrict, ...userIntermediatePath, endDistrict];
+  const hasWon = userIntermediatePath.length === correctPath.slice(1, -1).length &&
+    userFullPath.every((d, i) => d.trim().toLowerCase() === correctPath[i].trim().toLowerCase());
 
   return (
     <div className="p-4 rounded-lg border bg-muted text-muted-foreground shadow-sm">
@@ -30,27 +30,18 @@ export function GuessHistoryPanel({ guessHistory, startDistrict, endDistrict, co
             Your guesses will appear here. Try to find the shortest path from {startDistrict} to {endDistrict}!
           </div>
         ) : (
-          guessHistory.map((guess, idx) => {
-            const fullPath = [startDistrict, ...guess, endDistrict];
-            const isCorrect =
-              fullPath.length === correctPath.length &&
-              fullPath.every((d, i) => d.trim().toLowerCase() === correctPath[i].trim().toLowerCase());
-            return (
-              <div key={idx} className="flex items-center gap-2">
-                {isCorrect ? (
-                  <CheckCircle className="text-green-600 w-5 h-5" />
-                ) : (
-                  <XCircle className="text-red-500 w-5 h-5" />
-                )}
-                <span className="text-xs font-bold text-gray-500">{idx + 1}.</span>
-                {guess.map((district, dIdx) => (
-                  <span key={district + dIdx} className="px-2 py-1 rounded bg-blue-100 text-blue-800 font-semibold">
-                    {district}
-                  </span>
-                ))}
-              </div>
-            );
-          })
+          <div className="flex items-center gap-2">
+            {hasWon ? (
+              <CheckCircle className="text-green-600 w-5 h-5" />
+            ) : (
+              <span className="text-xs font-bold text-gray-500">{guessHistory.length}.</span>
+            )}
+            {userIntermediatePath.map((district, dIdx) => (
+              <span key={district + dIdx} className="px-2 py-1 rounded bg-blue-100 text-blue-800 font-semibold">
+                {district}
+              </span>
+            ))}
+          </div>
         )}
       </div>
     </div>
