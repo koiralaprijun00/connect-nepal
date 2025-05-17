@@ -33,7 +33,7 @@ const PUZZLES: Puzzle[] = [
   {
     id: 'puzzle_3',
     startDistrict: 'morang',
-    endDistrict: 'dhangadhi',
+    endDistrict: 'kailali',
     shortestPath: ['morang', 'sunsari', 'dhankuta', 'terhathum', 'panchthar', 'kailali', 'dhangadhi'],
   },
   {
@@ -62,7 +62,7 @@ const PUZZLES: Puzzle[] = [
   },
   {
     id: 'puzzle_8',
-    startDistrict: 'hetauda',
+    startDistrict: 'makawanpur',
     endDistrict: 'bajura',
     shortestPath: ['makawanpur', 'dhading', 'nuwakot', 'rasuwa', 'humla', 'bajura'],
   }

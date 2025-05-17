@@ -58,8 +58,11 @@ export function NepalDistrictMap({
 		}
 	  
 		if (el) {
-		  el.setAttribute('class', cssClass);
-		}
+			console.log('Highlighting', districtName, 'with', cssClass);
+			el.setAttribute('class', cssClass);
+		  } else {
+			console.warn('Could not find element for', districtName);
+		  }
 	  };
   
 	 // Only highlight start and end if no guesses have been made
