@@ -1,39 +1,37 @@
 "use client";
 import { useState, useEffect, useCallback } from 'react';
 import type { Puzzle, SubmittedGuess } from '@/types';
-import { getDailyPuzzle, calculateScore, parseGuessInput } from '@/lib/puzzle';
+import { getRandomPuzzle, calculateScore, parseGuessInput } from '@/lib/puzzle';
 
 import { CombinedHeaderPuzzle } from '@/components/nepal-traversal/CombinedHeaderPuzzle';
 import { MapDisplay } from '@/components/nepal-traversal/MapDisplay';
 import { GuessInput } from '@/components/nepal-traversal/GuessInput';
-import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { GuessHistoryPanel } from '@/components/nepal-traversal/GuessHistoryPanel';
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 export default function NepalTraversalPage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [currentPathForHint, setCurrentPathForHint] = useState<string[]>([]);
   const [submittedGuesses, setSubmittedGuesses] = useState<SubmittedGuess[]>([]);
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
-  const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [latestGuessResult, setLatestGuessResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [guessHistory, setGuessHistory] = useState<string[][]>([]);
 
-  const { toast } = useToast();
-
-  useEffect(() => {
-    setCurrentDate(new Date());
+  const startNewGame = useCallback(() => {
+    const newPuzzle = getRandomPuzzle();
+    setPuzzle(newPuzzle);
+    setSubmittedGuesses([]);
+    setCurrentPathForHint(newPuzzle.shortestPath.length > 0 ? [newPuzzle.shortestPath[0]] : []);
+    setGuessHistory([]);
+    setLatestGuessResult(null);
   }, []);
 
   useEffect(() => {
-    if (currentDate) {
-      const dailyPuzzle = getDailyPuzzle(currentDate);
-      setPuzzle(dailyPuzzle);
-      setSubmittedGuesses([]);
-      setCurrentPathForHint(dailyPuzzle.shortestPath.length > 0 ? [dailyPuzzle.shortestPath[0]] : []);
-    }
-  }, [currentDate]);
+    startNewGame();
+  }, []);
 
   const handleGuessSubmit = useCallback(
     async (intermediateDistricts: string[]) => {
@@ -43,7 +41,7 @@ export default function NepalTraversalPage() {
       // Build the full path: [start, ...intermediate, end]
       const fullPath = [puzzle.startDistrict, ...intermediateDistricts, puzzle.endDistrict];
       if (intermediateDistricts.some(d => !d)) {
-        toast({ title: "Invalid Guess", description: "Please enter valid districts.", variant: "destructive" });
+        setLatestGuessResult({ type: 'error', message: 'Please enter valid districts.' });
         setIsSubmittingGuess(false);
         return;
       }
@@ -59,7 +57,6 @@ export default function NepalTraversalPage() {
       setCurrentPathForHint(fullPath); // Update path for map display
 
       if (score === 100) {
-        toast({ title: "Congratulations!", description: feedback, variant: "default", duration: 5000 });
         setLatestGuessResult({ type: 'success', message: 'Congratulations! You found the shortest path!' });
       } else {
         setLatestGuessResult({ type: 'error', message: 'That is not the shortest path. Try again!' });
@@ -70,10 +67,10 @@ export default function NepalTraversalPage() {
 
       setIsSubmittingGuess(false);
     },
-    [puzzle, submittedGuesses, toast, guessHistory]
+    [puzzle, submittedGuesses]
   );
   
-  if (!puzzle || !currentDate) {
+  if (!puzzle) {
     return (
       <div className="max-w-4xl mx-auto flex flex-col gap-4 p-4 min-h-screen animate-pulse">
         <Skeleton className="h-20 w-full rounded-lg mb-4" />
@@ -92,7 +89,17 @@ export default function NepalTraversalPage() {
 
   return (
     <div className="max-w-4xl mx-auto flex flex-col gap-4 p-4 min-h-screen bg-background selection:bg-primary/20">
-      <CombinedHeaderPuzzle startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
+      <div className="flex justify-between items-start">
+        <CombinedHeaderPuzzle startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
+        <Button 
+          onClick={startNewGame}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          New Game
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Left Column: Main game */}
@@ -124,7 +131,7 @@ export default function NepalTraversalPage() {
         </div>
       </div>
       <footer className="text-center py-2 text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Nepal Traversal. Puzzle changes daily.</p>
+        <p>&copy; {new Date().getFullYear()} Nepal Traversal. Play as many puzzles as you want!</p>
       </footer>
     </div>
   );

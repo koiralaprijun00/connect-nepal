@@ -1,4 +1,3 @@
-
 import type { Puzzle } from '@/types';
 
 // A more comprehensive list of districts in Nepal, sorted alphabetically.
@@ -18,36 +17,65 @@ export const DISTRICTS_NEPAL = [
 ].sort();
 
 
-const DAILY_PUZZLES: Puzzle[] = [
+const PUZZLES: Puzzle[] = [
   {
-    id: 'daily_1',
+    id: 'puzzle_1',
     startDistrict: 'Kathmandu',
     endDistrict: 'Kavrepalanchok',
     shortestPath: ['Kathmandu', 'Bhaktapur', 'Kavrepalanchok'],
   },
   {
-    id: 'daily_2',
+    id: 'puzzle_2',
     startDistrict: 'Lalitpur',
     endDistrict: 'Nuwakot',
     shortestPath: ['Lalitpur', 'Kathmandu', 'Nuwakot'],
   },
   {
-    id: 'daily_3',
+    id: 'puzzle_3',
     startDistrict: 'Chitwan',
     endDistrict: 'Dhading',
-    shortestPath: ['Chitwan', 'Makwanpur', 'Dhading'], // Fictional path for variety
+    shortestPath: ['Chitwan', 'Makwanpur', 'Dhading'],
   },
-   {
-    id: 'daily_4',
+  {
+    id: 'puzzle_4',
     startDistrict: 'Rasuwa',
     endDistrict: 'Sindhupalchok',
     shortestPath: ['Rasuwa', 'Nuwakot', 'Sindhupalchok'],
+  },
+  {
+    id: 'puzzle_5',
+    startDistrict: 'Pokhara',
+    endDistrict: 'Mustang',
+    shortestPath: ['Pokhara', 'Kaski', 'Mustang'],
+  },
+  {
+    id: 'puzzle_6',
+    startDistrict: 'Biratnagar',
+    endDistrict: 'Ilam',
+    shortestPath: ['Biratnagar', 'Morang', 'Ilam'],
+  },
+  {
+    id: 'puzzle_7',
+    startDistrict: 'Nepalgunj',
+    endDistrict: 'Surkhet',
+    shortestPath: ['Nepalgunj', 'Banke', 'Surkhet'],
+  },
+  {
+    id: 'puzzle_8',
+    startDistrict: 'Dharan',
+    endDistrict: 'Taplejung',
+    shortestPath: ['Dharan', 'Sunsari', 'Taplejung'],
   }
 ];
 
 export function getDailyPuzzle(date: Date): Puzzle {
   const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
-  return DAILY_PUZZLES[dayOfYear % DAILY_PUZZLES.length];
+  return PUZZLES[dayOfYear % PUZZLES.length];
+}
+
+export function getRandomPuzzle(): Puzzle {
+  const randomIndex = Math.floor(Math.random() * PUZZLES.length);
+  return PUZZLES[randomIndex];
 }
 
 export function calculateScore(guessedPath: string[], shortestPath: string[]): { score: number; feedback: string } {
