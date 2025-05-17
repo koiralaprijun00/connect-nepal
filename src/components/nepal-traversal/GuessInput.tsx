@@ -28,6 +28,8 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const isGameWon = latestGuessResult?.type === 'success';
+
   // Filter districts for autocomplete suggestions, excluding already selected and start/end
   const filteredDistricts: string[] = useMemo(() => {
     const exclude = [startDistrict, endDistrict, ...intermediateDistricts].map(d => d.toLowerCase());
@@ -39,6 +41,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
   }, [inputValue, intermediateDistricts, startDistrict, endDistrict]);
 
   function handleDistrictSelect(selectedDistrict: string) {
+    if (isGameWon) return;
     setIntermediateDistricts((prev: string[]) => [...prev, selectedDistrict]);
     setInputValue("");
     setPopoverOpen(false);
@@ -48,11 +51,13 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
   }
 
   function handleRemoveDistrict(index: number) {
+    if (isGameWon) return;
     setIntermediateDistricts((prev: string[]) => prev.filter((_, i) => i !== index));
   }
 
   function handleFormSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (isGameWon) return;
     onSubmit(intermediateDistricts);
     setIntermediateDistricts([]);
     setInputValue("");
@@ -61,6 +66,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
   }
 
   function handleInputEnter() {
+    if (isGameWon) return;
     const input = inputValue.trim();
     if (!input) return;
     // Check if input matches a valid, not-already-selected district
@@ -77,6 +83,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
 
   // Keyboard navigation for popover
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (isGameWon) return;
     if (popoverOpen && filteredDistricts.length > 0) {
       switch (e.key) {
         case "ArrowDown":
@@ -118,7 +125,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
 
   // Control popover state based on input value
   useEffect(() => {
-    if (isLoading) {
+    if (isLoading || isGameWon) {
       setPopoverOpen(false);
       setHighlightedIndex(null);
       return;
@@ -130,7 +137,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
       setPopoverOpen(false);
       setHighlightedIndex(null);
     }
-  }, [inputValue, isLoading, filteredDistricts.length]);
+  }, [inputValue, isLoading, filteredDistricts.length, isGameWon]);
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6">
@@ -148,6 +155,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
                   className="ml-1.5 -mr-0.5 h-4 w-4 rounded-full bg-blue-200 text-blue-700 inline-flex items-center justify-center"
                   onClick={() => handleRemoveDistrict(idx)}
                   aria-label={`Remove ${district}`}
+                  disabled={isGameWon}
                 >
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -162,19 +170,21 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
             ref={inputRef}
             value={inputValue}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              if (isGameWon) return;
               setInputValue(e.target.value);
               setError(null);
             }}
             onFocus={() => {
+              if (isGameWon) return;
               if (inputValue.trim() && filteredDistricts.length > 0) setPopoverOpen(true);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Type a district and press Enter or select"
-            disabled={isLoading}
+            placeholder={isGameWon ? "Puzzle completed!" : "Type a district and press Enter or select"}
+            disabled={isLoading || isGameWon}
             className="text-base"
             autoComplete="off"
           />
-          {popoverOpen && filteredDistricts.length > 0 && (
+          {popoverOpen && filteredDistricts.length > 0 && !isGameWon && (
             <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border">
               <ScrollArea className="rounded-md max-h-52 overflow-y-auto">
                 <div className="p-1">
@@ -196,21 +206,14 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
         </div>
         {error && <div className="text-red-600 text-sm mt-1">{error}</div>}
       </div>
-      <Button type="submit" className="w-full text-lg" disabled={isLoading || intermediateDistricts.length === 0}>
+      <Button 
+        type="submit" 
+        className="w-full text-lg" 
+        disabled={isLoading || intermediateDistricts.length === 0 || isGameWon}
+      >
         <Send className="mr-2 h-5 w-5" />
-        {isLoading ? "Submitting..." : "Submit Guess"}
+        {isLoading ? "Submitting..." : isGameWon ? "Puzzle Completed!" : "Submit Guess"}
       </Button>
-      {latestGuessResult && (
-        <div
-          className={`mt-4 p-4 rounded-lg border shadow-sm text-base font-medium ${
-            latestGuessResult.type === 'success'
-              ? 'bg-green-100 border-green-400 text-green-800'
-              : 'bg-red-100 border-red-400 text-red-800'
-          }`}
-        >
-          {latestGuessResult.message}
-        </div>
-      )}
     </form>
   );
 };
