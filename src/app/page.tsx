@@ -130,9 +130,6 @@ export default function NepalTraversalPage() {
           />
         </div>
       </div>
-      <footer className="text-center py-2 text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Nepal Traversal. Play as many puzzles as you want!</p>
-      </footer>
     </div>
   );
 }

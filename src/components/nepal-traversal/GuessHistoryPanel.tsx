@@ -16,7 +16,7 @@ export function GuessHistoryPanel({ guessHistory, startDistrict, endDistrict, co
   });
 
   return (
-    <div className="mt-6 p-4 rounded-lg border bg-muted text-muted-foreground shadow-sm">
+    <div className="p-4 rounded-lg border bg-muted text-muted-foreground shadow-sm">
       <div className="font-semibold mb-2">Past Guesses:</div>
       {hasWon && (
         <div className="mb-4 p-3 rounded-lg bg-green-100 border border-green-200 text-green-800 flex items-center gap-2">
