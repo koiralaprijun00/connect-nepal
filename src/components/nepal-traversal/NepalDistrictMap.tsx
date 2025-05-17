@@ -21,75 +21,76 @@ export function NepalDistrictMap({
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    if (!svgRef.current) return;
-    const svg = svgRef.current;
-    
-    const allElements = Array.from(svg.querySelectorAll('path, g, rect, circle, polygon, polyline, line, ellipse') || []) as SVGElement[];
-
-    // 1. Reset all relevant elements to default class
-    allElements.forEach(el => {
-      if (el.id || el.dataset.name) {
-        el.setAttribute('class', 'district-default');
-      }
-    });
-
-    const setElementClass = (districtName: string, cssClass: string) => {
-      if (!districtName) return; 
-      const districtNameLower = districtName.toLowerCase();
-      let el = svg.getElementById(districtName);
-      if (!el) el = svg.getElementById(districtNameLower);
-      if (!el) el = svg.getElementById(districtName.charAt(0).toUpperCase() + districtName.slice(1).toLowerCase());
-
-      if (!el) {
-        const elements = [
-          svg.querySelector(`[data-name="${districtName}"]`),
-          svg.querySelector(`[data-name="${districtNameLower}"]`),
-          svg.querySelector(`[data-name="${districtName.charAt(0).toUpperCase() + districtName.slice(1).toLowerCase()}"]`)
-        ];
-        const foundElement = elements.find(e => e !== null);
-        if (foundElement) {
-          el = foundElement;
-        }
-      }
-
-      if (el) {
-        el.setAttribute('class', cssClass); 
-      }
-    };
-    
-    const lowerCorrectPath = correctPath.map(d => d.toLowerCase());
-    const lowerGuessedPath = guessedPath.map(d => d.toLowerCase());
-
-    // 2. Style the true shortest path
-    correctPath.forEach(districtName => {
-      setElementClass(districtName, 'district-correct-path');
-    });
-
-    // 3. Style the user's guessed path
-    guessedPath.forEach((originalGuessedDistrictName, index) => {
-      const guessedDistrictLower = originalGuessedDistrictName.toLowerCase();
-
-      if (index < lowerCorrectPath.length && guessedDistrictLower === lowerCorrectPath[index]) {
-        setElementClass(originalGuessedDistrictName, 'district-guessed-correct');
-      } else {
-        if (!lowerCorrectPath.includes(guessedDistrictLower)) {
-          // This is the line with the error - fixed by adding null check
-          const el = svg.getElementById(originalGuessedDistrictName) || svg.querySelector(`[data-name="${originalGuessedDistrictName}"]`);
-          if (el) {
-            const currentClass = el.getAttribute('class') || '';
-            if (currentClass !== 'district-start' && currentClass !== 'district-end') {
-               setElementClass(originalGuessedDistrictName, 'district-guessed-incorrect');
-            }
-          }
-        }
-      }
-    });
-
-    // 4. Style start and end districts (these have highest precedence)
-    if (startDistrict) setElementClass(startDistrict, 'district-start');
-    if (endDistrict) setElementClass(endDistrict, 'district-end');
-
-  }, [guessedPath, correctPath, startDistrict, endDistrict]);
+	if (!svgRef.current) return;
+	const svg = svgRef.current;
+	const allElements = Array.from(svg.querySelectorAll('path, g, rect, circle, polygon, polyline, line, ellipse') || []) as SVGElement[];
+  
+	// Reset all relevant elements to default class
+	allElements.forEach(el => {
+		if (el.id || el.dataset.name) {
+		  el.setAttribute('class', 'district-default');
+		}
+	  });
+  
+	const setElementClass = (districtName: string, cssClass: string) => {
+		if (!districtName || !svgRef.current) return;
+		const svg = svgRef.current;
+		const normalized = districtName.trim().toLowerCase();
+	  
+		// Try to find <g> or <path> by id (case-insensitive)
+		let el: SVGElement | null =
+		  svg.querySelector(`g[id="${districtName}"], g[id="${normalized}"], g[id="${districtName.charAt(0).toUpperCase() + districtName.slice(1).toLowerCase()}"]`) ||
+		  svg.querySelector(`path[id="${districtName}"], path[id="${normalized}"], path[id="${districtName.charAt(0).toUpperCase() + districtName.slice(1).toLowerCase()}"]`);
+	  
+		// If found a <g>, prefer its child <path>
+		if (el && el.tagName.toLowerCase() === 'g') {
+		  const path = el.querySelector('path');
+		  if (path) el = path;
+		}
+	  
+		// If not found, try data-name attribute
+		if (!el) {
+		  el =
+			svg.querySelector(`path[data-name="${districtName}"]`) ||
+			svg.querySelector(`path[data-name="${normalized}"]`) ||
+			svg.querySelector(`g[data-name="${districtName}"] path`) ||
+			svg.querySelector(`g[data-name="${normalized}"] path`);
+		}
+	  
+		if (el) {
+		  el.setAttribute('class', cssClass);
+		}
+	  };
+  
+	 // Only highlight start and end if no guesses have been made
+	 if ((!guessedPath || guessedPath.length === 0)) {
+		if (startDistrict) setElementClass(startDistrict, 'district-start');
+		if (endDistrict) setElementClass(endDistrict, 'district-end');
+		return; // Stop here, don't highlight anything else
+	  }
+  
+	// Highlight correct path (if you want to show it)
+	if (correctPath && correctPath.length > 0) {
+	  correctPath.forEach(districtName => {
+		setElementClass(districtName, 'district-correct-path');
+	  });
+	}
+  
+	// Highlight correct guesses (if you want to show them)
+	if (guessedPath && correctPath) {
+	  const lowerCorrectPath = correctPath.map(d => d.toLowerCase());
+	  guessedPath.forEach((guessedDistrict, idx) => {
+		if (lowerCorrectPath.includes(guessedDistrict.toLowerCase())) {
+		  setElementClass(guessedDistrict, 'district-guessed-correct');
+		}
+		// Do NOT highlight incorrect guesses at all
+	  });
+	}
+  
+	// 2. Always highlight start and end districts last (so they take precedence)
+	if (startDistrict) setElementClass(startDistrict, 'district-start');
+	if (endDistrict) setElementClass(endDistrict, 'district-end');
+  }, [guessedPath, startDistrict, endDistrict]);
 
   return (
     <svg

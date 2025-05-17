@@ -27,6 +27,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const justSelected = useRef(false);
 
   // Filter districts for autocomplete suggestions, excluding start/end
   const filteredDistricts: string[] = useMemo(() => {
@@ -44,6 +45,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
     setPopoverOpen(false);
     setHighlightedIndex(null);
     setError(null);
+    justSelected.current = true;
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
@@ -129,10 +131,14 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
       setHighlightedIndex(null);
       return;
     }
+    if (justSelected.current) {
+      justSelected.current = false;
+      return;
+    }
     // Only open popover when input has content and there are suggestions
     if (guessDistrict.trim() && filteredDistricts.length > 0 && document.activeElement === inputRef.current) {
       setPopoverOpen(true);
-    } else if (!guessDistrict.trim()) {
+    } else {
       setPopoverOpen(false);
       setHighlightedIndex(null);
     }

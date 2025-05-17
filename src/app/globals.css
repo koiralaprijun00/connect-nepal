@@ -125,16 +125,16 @@
     stroke-width: 1px;
   }
   .district-start {
-    fill: hsl(var(--primary)) !important; /* Vibrant orange-red */
-    stroke: hsl(var(--primary-foreground)) !important;
+    fill: #22c55e !important; /* Green fill */
+    stroke: #166534 !important;
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.5));
+    filter: drop-shadow(0 0 4px #22c55e80);
   }
   .district-end {
-    fill: hsl(var(--destructive)) !important; /* Red for end point */
-    stroke: hsl(var(--destructive-foreground)) !important;
+    fill: #ef4444 !important; /* Red fill */
+    stroke: #991b1b !important;
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 4px hsl(var(--destructive) / 0.5));
+    filter: drop-shadow(0 0 4px #ef444480);
   }
   .district-correct-path {
     fill: hsl(var(--primary) / 0.3); /* Light orange-red */
