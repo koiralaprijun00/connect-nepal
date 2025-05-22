@@ -2,11 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { DISTRICTS_NEPAL } from "@/lib/puzzle";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent
-} from "@/components/ui/popover";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

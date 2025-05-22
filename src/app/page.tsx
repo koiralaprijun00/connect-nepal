@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from 'react';
-import type { Puzzle, SubmittedGuess } from '@/types';
-import { getRandomPuzzle, calculateScore, parseGuessInput } from '@/lib/puzzle';
+import type { Puzzle } from '@/types';
+import { getRandomPuzzle } from '@/lib/puzzle';
 
 import { CombinedHeaderPuzzle } from '@/components/nepal-traversal/CombinedHeaderPuzzle';
 import { MapDisplay } from '@/components/nepal-traversal/MapDisplay';
@@ -32,28 +32,22 @@ export default function NepalTraversalPage() {
   }, []);
 
   const correctPath: string[] = puzzle ? puzzle.shortestPath.slice(1, -1) : [];
-  const normalize = (arr: string[]): string[] => arr.map((d: string) => d.trim().toLowerCase()).sort();
-  const requiredSet = new Set(correctPath.map(d => d.trim().toLowerCase()));
-  const correctGuessesSet = new Set(userPath.filter(d => requiredSet.has(d.trim().toLowerCase())).map(d => d.trim().toLowerCase()));
-  const isGameWon = correctGuessesSet.size === requiredSet.size;
-
-  // Robust win logic: user wins as soon as all required districts are present in their guesses
   const required = correctPath.map(d => d.trim().toLowerCase());
   const correctGuesses = userPath.filter(d => required.includes(d.trim().toLowerCase()));
-  const isGameWonRobust = required.every(d => correctGuesses.map(x => x.trim().toLowerCase()).includes(d));
+  const isGameWon = required.every(d => correctGuesses.map(x => x.trim().toLowerCase()).includes(d));
 
   useEffect(() => {
-    if (isGameWonRobust && userPath.length > 0) {
+    if (isGameWon && userPath.length > 0) {
       setLatestGuessResult({ type: 'success', message: 'Congratulations! You found the shortest path!' });
     }
-  }, [isGameWonRobust, userPath.length]);
+  }, [isGameWon, userPath.length]);
 
   useEffect(() => {
     if (!latestGuessResult) return;
-    if (latestGuessResult.type === 'success' && isGameWonRobust) return; // Keep win message
+    if (latestGuessResult.type === 'success' && isGameWon) return; // Keep win message
     const timeout = setTimeout(() => setLatestGuessResult(null), 3000);
     return () => clearTimeout(timeout);
-  }, [latestGuessResult, isGameWonRobust]);
+  }, [latestGuessResult, isGameWon]);
 
   const handleGuessSubmit = useCallback(
     async ([district]: string[]) => {
@@ -73,12 +67,12 @@ export default function NepalTraversalPage() {
       const newCorrectGuesses = newPath.filter(d => required.includes(d.trim().toLowerCase()));
       if (!isCorrect) {
         setLatestGuessResult({ type: 'error', message: 'Incorrect. Try again!' });
-      } else if (!isGameWonRobust) {
+      } else if (!isGameWon) {
         setLatestGuessResult({ type: 'success', message: `Correct! Keep going (${newCorrectGuesses.length}/${required.length})` });
       }
       setIsSubmittingGuess(false);
     },
-    [puzzle, userPath, required, isGameWonRobust]
+    [puzzle, userPath, required, isGameWon]
   );
   
   if (!puzzle) {
@@ -127,10 +121,9 @@ export default function NepalTraversalPage() {
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
             latestGuessResult={latestGuessResult}
-            isGameWon={isGameWonRobust}
+            isGameWon={isGameWon}
           />
-          <Card className="max-h-[calc(50vh-2rem)] overflow-auto shadow-lg">
-          </Card>
+
         </div>
         {/* Right Column: Past guesses */}
         <div>
