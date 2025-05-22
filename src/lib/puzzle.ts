@@ -29,56 +29,30 @@ function validatePuzzle(puzzle: Puzzle): boolean {
   return true;
 }
 
-const PUZZLES: Puzzle[] = [
+// Simple manual puzzles for reliable fallback
+const MANUAL_PUZZLES: Puzzle[] = [
   {
     id: 'puzzle_1',
-    startDistrict: 'kathmandu',
-    endDistrict: 'dolpa',
-    shortestPath: ['kathmandu', 'nuwakot', 'rasuwa', 'gorkha', 'baglung', 'myagdi', 'dolpa'],
-  },
-  {
-    id: 'puzzle_2',
-    startDistrict: 'kaski',
-    endDistrict: 'lamjung',
-    shortestPath: ['kaski', 'syangja', 'palpa', 'gorkha', 'lamjung'],
-  },
-  {
-    id: 'puzzle_3',
-    startDistrict: 'dhading',
-    endDistrict: 'chitwan',
-    shortestPath: ['dhading', 'makwanpur', 'parsa', 'chitwan'],
-  },
-  {
-    id: 'puzzle_4',
     startDistrict: 'rupandehi',
     endDistrict: 'gulmi',
     shortestPath: ['rupandehi', 'palpa', 'gulmi'],
   },
   {
-    id: 'puzzle_5',
-    startDistrict: 'jhapa',
-    endDistrict: 'panchthar',
-    shortestPath: ['jhapa', 'morang', 'sunsari', 'dhankuta', 'panchthar'],
+    id: 'puzzle_2',
+    startDistrict: 'dhading',
+    endDistrict: 'chitwan',
+    shortestPath: ['dhading', 'makwanpur', 'parsa', 'chitwan'],
   },
   {
-    id: 'puzzle_6',
-    startDistrict: 'lalitpur',
-    endDistrict: 'ramechhap',
-    shortestPath: ['lalitpur', 'bhaktapur', 'kavrepalanchok', 'dolakha', 'ramechhap'],
-  },
-  {
-    id: 'puzzle_7',
-    startDistrict: 'banke',
-    endDistrict: 'dailekh',
-    shortestPath: ['banke', 'bardiya', 'surkhet', 'jajarkot', 'dailekh'],
-  },
-  {
-    id: 'puzzle_8',
-    startDistrict: 'sindhupalchok',
-    endDistrict: 'solukhumbu',
-    shortestPath: ['sindhupalchok', 'dolakha', 'ramechhap', 'okhaldhunga', 'solukhumbu'],
+    id: 'puzzle_3',
+    startDistrict: 'kathmandu',
+    endDistrict: 'lalitpur',
+    shortestPath: ['kathmandu', 'lalitpur'],
   }
 ];
+
+// Use manual puzzles as base, can be enhanced with auto-generation at runtime
+const PUZZLES: Puzzle[] = MANUAL_PUZZLES;
 
 // Validate all puzzles on module load
 const validPuzzles = PUZZLES.filter(validatePuzzle);

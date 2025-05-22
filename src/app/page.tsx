@@ -20,7 +20,7 @@ export default function NepalTraversalPage() {
   const [guessHistory, setGuessHistory] = useState<string[][]>([]);
 
   const startNewGame = useCallback(() => {
-    const newPuzzle = getRandomPuzzle();
+    const newPuzzle = getRandomPuzzle(true); // Use auto-generated puzzles
     setPuzzle(newPuzzle);
     setUserPath([]);
     setGuessHistory([]);
