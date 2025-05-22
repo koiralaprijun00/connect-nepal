@@ -94,19 +94,9 @@ export default function NepalTraversalPage() {
 
   return (
     <div className="max-w-4xl mx-auto flex flex-col gap-4 p-4 min-h-screen bg-background selection:bg-primary/20">
-      <div className="flex justify-between items-start">
-        <CombinedHeaderPuzzle startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
-        <Button 
-          onClick={startNewGame}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          New Game
-        </Button>
-      </div>
+      <CombinedHeaderPuzzle startDistrict={puzzle.startDistrict} endDistrict={puzzle.endDistrict} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column: Main game */}
         <div className="flex flex-col gap-4">
           <MapDisplay 
@@ -127,6 +117,18 @@ export default function NepalTraversalPage() {
         </div>
         {/* Right Column: Past guesses */}
         <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold text-muted-foreground">Past Guesses</h3>
+            <Button 
+              onClick={startNewGame}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              New Game
+            </Button>
+          </div>
           <GuessHistoryPanel 
             guessHistory={guessHistory}
             startDistrict={puzzle.startDistrict}

@@ -11,94 +11,94 @@
 
 @layer base {
   :root {
-    /* Color palette inspired by Firebase Studio logo */
-    --background: 12 81% 96%; /* Soft light orange/peach */
-    --foreground: 16 24% 20%; /* Deep brownish-red for text */
-    --card: 12 81% 98%; /* Slightly lighter background */
-    --card-foreground: 16 24% 20%;
-    --popover: 12 81% 96%;
-    --popover-foreground: 16 24% 20%;
+    /* Temple-inspired vibrant color palette with white background */
+    --background: 0 0% 100%; /* Clean white background */
+    --foreground: 0 0% 8%; /* Dark text */
+    --card: 0 0% 98%; /* Very light card background */
+    --card-foreground: 0 0% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
 
-    /* Primary color - deep orange/red from logo */
-    --primary: 10 90% 55%; /* Vibrant orange-red */
-    --primary-foreground: 0 0% 100%; /* White */
+    /* Primary color - Golden orange like the temple */
+    --primary: 35 100% 60%; /* Golden orange */
+    --primary-foreground: 0 0% 100%; /* White text on bright background */
 
-    /* Secondary color - yellow from logo */
-    --secondary: 42 100% 56%; /* Bright yellow-orange */
-    --secondary-foreground: 16 24% 20%; /* Dark text */
+    /* Secondary color - Bright yellow like the gradient text */
+    --secondary: 50 100% 65%; /* Bright yellow */
+    --secondary-foreground: 0 0% 8%; /* Dark text */
 
-    /* Accent color - pink/magenta from logo */
-    --accent: 330 70% 60%; /* Vibrant pink/magenta */
-    --accent-foreground: 0 0% 100%; /* White */
+    /* Accent color - Pink/magenta from the gradient */
+    --accent: 320 100% 70%; /* Vibrant pink/magenta */
+    --accent-foreground: 0 0% 100%; /* White text */
 
-    --muted: 20 60% 95%; /* Very soft orange */
-    --muted-foreground: 16 24% 40%; /* Muted brownish text */
+    --muted: 0 0% 96%; /* Light muted background */
+    --muted-foreground: 0 0% 45%; /* Dark muted text */
 
-    --destructive: 0 84.2% 60.2%; /* Red for errors */
+    --destructive: 0 84% 60%; /* Red for errors */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 20 40% 85%; /* Soft orange border */
-    --input: 20 40% 90%;
-    --ring: 10 90% 55%; /* Same as primary */
+    --border: 0 0% 90%; /* Light border */
+    --input: 0 0% 100%; /* White input background */
+    --ring: 35 100% 60%; /* Golden orange ring */
 
-    /* Chart colors to complement the palette */
-    --chart-1: 10 90% 55%; /* Orange-red */
-    --chart-2: 42 100% 56%; /* Yellow */
-    --chart-3: 330 70% 60%; /* Pink/Magenta */
-    --chart-4: 16 24% 40%; /* Dark muted brown */
-    --chart-5: 20 60% 75%; /* Soft orange */
+    /* Chart colors matching the temple theme */
+    --chart-1: 35 100% 60%; /* Golden orange */
+    --chart-2: 50 100% 65%; /* Bright yellow */
+    --chart-3: 320 100% 70%; /* Pink/Magenta */
+    --chart-4: 15 100% 65%; /* Orange-red */
+    --chart-5: 0 0% 60%; /* Gray */
 
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 8%;
+    --sidebar-primary: 35 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 8%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 35 100% 60%;
   }
   .dark {
-    /* Dark mode palette maintaining logo's warm feel */
-    --background: 16 24% 10%; /* Very dark brown */
-    --foreground: 12 81% 96%; /* Light peach */
-    --card: 16 24% 15%; /* Slightly lighter dark brown */
-    --card-foreground: 12 81% 96%;
-    --popover: 16 24% 10%;
-    --popover-foreground: 12 81% 96%;
+    /* Dark mode - keeping dark theme for users who prefer it */
+    --background: 0 0% 8%; /* Dark background */
+    --foreground: 0 0% 98%; /* Bright white text */
+    --card: 0 0% 12%; /* Slightly lighter dark background */
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 10 90% 55%; /* Vibrant orange-red */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 35 100% 60%; /* Golden orange */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 42 100% 56%; /* Bright yellow-orange */
-    --secondary-foreground: 12 81% 96%; /* Light text */
+    --secondary: 50 100% 65%; /* Bright yellow */
+    --secondary-foreground: 0 0% 8%;
 
-    --accent: 330 70% 60%; /* Vibrant pink/magenta */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent: 320 100% 70%; /* Vibrant pink/magenta */
+    --accent-foreground: 0 0% 100%;
 
-    --muted: 16 24% 20%; /* Dark muted brown */
-    --muted-foreground: 20 60% 85%; /* Soft light orange */
+    --muted: 0 0% 18%; /* Dark muted background */
+    --muted-foreground: 0 0% 75%; /* Light muted text */
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 16 24% 30%; /* Dark border */
-    --input: 16 24% 25%;
-    --ring: 10 90% 55%;
+    --border: 0 0% 25%; /* Dark border */
+    --input: 0 0% 15%;
+    --ring: 35 100% 60%;
 
-    --chart-1: 10 90% 55%;
-    --chart-2: 42 100% 56%;
-    --chart-3: 330 70% 60%;
-    --chart-4: 20 60% 75%;
-    --chart-5: 16 24% 40%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --chart-1: 35 100% 60%;
+    --chart-2: 50 100% 65%;
+    --chart-3: 320 100% 70%;
+    --chart-4: 15 100% 65%;
+    --chart-5: 0 0% 60%;
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 35 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 25%;
+    --sidebar-ring: 35 100% 60%;
   }
 }
 
@@ -111,44 +111,99 @@
   }
 }
 
-/* SVG Map District Styles */
+/* Temple-inspired gradient text effects */
+@layer components {
+  .gradient-text {
+    background: linear-gradient(45deg, 
+      hsl(var(--secondary)), /* Bright yellow */
+      hsl(var(--primary)), /* Golden orange */
+      hsl(var(--accent)) /* Pink/magenta */
+    );
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 3s ease-in-out infinite alternate;
+  }
+  
+  .gradient-text-static {
+    background: linear-gradient(45deg, 
+      hsl(var(--secondary)), /* Bright yellow */
+      hsl(var(--primary)), /* Golden orange */
+      hsl(var(--accent)) /* Pink/magenta */
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .temple-glow {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3),
+                0 0 40px hsl(var(--primary) / 0.2),
+                0 0 60px hsl(var(--primary) / 0.1);
+  }
+
+  .temple-border {
+    border: 1px solid;
+    border-image: linear-gradient(45deg, 
+      hsl(var(--secondary)), 
+      hsl(var(--primary)), 
+      hsl(var(--accent))
+    ) 1;
+  }
+}
+
+/* SVG Map District Styles - Temple Theme with White Background */
 @layer components {
   .district-default {
-    fill: hsl(var(--muted)); /* Soft orange background */
+    fill: hsl(var(--muted)); /* Light muted background */
     stroke: hsl(var(--border));
     stroke-width: 0.5px;
     transition: all 0.3s ease-in-out;
   }
   .district-default:hover {
-    fill: hsl(var(--accent) / 0.2); /* Soft pink/magenta on hover */
-    stroke: hsl(var(--accent));
+    fill: hsl(var(--primary) / 0.2); /* Light golden glow on hover */
+    stroke: hsl(var(--primary));
     stroke-width: 1px;
+    filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.3));
   }
   .district-start {
-    fill: #22c55e !important; /* Green fill */
-    stroke: #166534 !important;
+    fill: hsl(var(--secondary)) !important; /* Bright yellow start */
+    stroke: hsl(var(--foreground)) !important;
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 4px #22c55e80);
+    filter: drop-shadow(0 0 6px hsl(var(--secondary) / 0.4));
   }
   .district-end {
-    fill: #ef4444 !important; /* Red fill */
-    stroke: #991b1b !important;
+    fill: hsl(var(--accent)) !important; /* Pink/magenta end */
+    stroke: hsl(var(--foreground)) !important;
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 4px #ef444480);
+    filter: drop-shadow(0 0 6px hsl(var(--accent) / 0.4));
   }
   .district-correct-path {
-    fill: hsl(var(--primary) / 0.3); /* Light orange-red */
-    stroke: hsl(var(--primary) / 0.8);
+    fill: hsl(var(--primary) / 0.3); /* Light golden path */
+    stroke: hsl(var(--primary));
     stroke-width: 1px;
+    filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.2));
   }
   .district-guessed-correct {
-    fill: hsl(var(--accent)); /* Vibrant pink/magenta */
-    stroke: hsl(var(--accent-foreground) / 0.5);
+    fill: hsl(var(--primary)) !important; /* Golden orange for correct */
+    stroke: hsl(var(--foreground));
     stroke-width: 1.5px;
+    filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.4));
   }
   .district-guessed-incorrect {
-    fill: hsl(var(--secondary) / 0.5); /* Soft yellow-orange */
-    stroke: hsl(var(--secondary));
+    fill: hsl(var(--destructive) / 0.7) !important; /* Red for incorrect */
+    stroke: hsl(var(--foreground));
     stroke-width: 1px;
+    filter: drop-shadow(0 0 3px hsl(var(--destructive) / 0.3));
   }
 }

@@ -14,7 +14,6 @@ export function GuessHistoryPanel({ guessHistory, startDistrict, endDistrict, co
 
   return (
     <div className="p-4 rounded-lg border bg-muted text-muted-foreground shadow-sm">
-      <div className="font-semibold mb-2">Past Guesses:</div>
       <div className="flex flex-col gap-2">
         {guessHistory.length === 0 ? (
           <div className="text-sm text-muted-foreground italic">
