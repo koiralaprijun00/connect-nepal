@@ -52,7 +52,7 @@ const PUZZLES: Puzzle[] = [
     id: 'puzzle_4',
     startDistrict: 'rupandehi',
     endDistrict: 'gulmi',
-    shortestPath: ['rupandehi', 'nawalparasi', 'palpa', 'syangja', 'gulmi'],
+    shortestPath: ['rupandehi', 'palpa', 'gulmi'],
   },
   {
     id: 'puzzle_5',
