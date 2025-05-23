@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Puzzle } from '@/types';
 import { GuessResult } from '@/lib/gameLogic';
-import { EnhancedGuessInput, EnhancedGuessHistory } from '@/components/EnhancedGameUI';
 import { InteractiveNepalMap } from '@/components/InteractiveNepalMap';
 
 interface SequentialModeProps {
@@ -39,20 +38,6 @@ export function SequentialMode({
         onDistrictClick={d => d.toLowerCase() === nextStep?.toLowerCase() && onGuess(d)}
         showAdjacencies={false}
         showHints={false}
-      />
-      <EnhancedGuessInput
-        onGuess={d => d.toLowerCase() === nextStep?.toLowerCase() && onGuess(d)}
-        onUndo={onUndo}
-        onHint={onHint}
-        canUndo={userPath.length > 0}
-        hintsRemaining={3}
-        isLoading={false}
-        lastFeedback={lastFeedback}
-        suggestedDistricts={nextStep ? [nextStep] : []}
-      />
-      <EnhancedGuessHistory
-        guesses={guessHistory}
-        correctPath={puzzle.shortestPath.slice(1, -1)}
       />
     </div>
   );

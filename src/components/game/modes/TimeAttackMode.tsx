@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Puzzle } from '@/types';
 import { GuessResult } from '@/lib/gameLogic';
-import { EnhancedGuessInput, EnhancedGuessHistory } from '@/components/EnhancedGameUI';
 import { InteractiveNepalMap } from '@/components/InteractiveNepalMap';
 
 interface TimeAttackModeProps {
@@ -45,20 +44,6 @@ export function TimeAttackMode({
         onDistrictClick={onGuess}
         showAdjacencies={false}
         showHints={false}
-      />
-      <EnhancedGuessInput
-        onGuess={onGuess}
-        onUndo={onUndo}
-        onHint={onHint}
-        canUndo={userPath.length > 0}
-        hintsRemaining={3}
-        isLoading={false}
-        lastFeedback={lastFeedback}
-        suggestedDistricts={puzzle.shortestPath}
-      />
-      <EnhancedGuessHistory
-        guesses={guessHistory}
-        correctPath={puzzle.shortestPath.slice(1, -1)}
       />
     </div>
   );
