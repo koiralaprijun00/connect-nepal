@@ -345,3 +345,39 @@ export function logPuzzleInfo(puzzle: Puzzle): void {
   console.log('');
 }
 
+// Find all shortest paths between two districts using BFS
+export function findAllShortestPaths(
+  start: string,
+  end: string,
+  adjacencyMap: Record<string, string[]> = DISTRICT_ADJACENCY
+): string[][] {
+  const s = start.trim().toLowerCase();
+  const e = end.trim().toLowerCase();
+  if (s === e) return [[s]];
+  if (!adjacencyMap[s] || !adjacencyMap[e]) return [];
+
+  let shortestLength = Infinity;
+  const result: string[][] = [];
+  const queue: string[][] = [[s]];
+
+  while (queue.length > 0) {
+    const path = queue.shift()!;
+    if (shortestLength !== Infinity && path.length > shortestLength) break;
+    const last = path[path.length - 1];
+    if (last === e) {
+      if (path.length < shortestLength) {
+        shortestLength = path.length;
+        result.length = 0; // Clear previous longer paths
+      }
+      result.push([...path]);
+      continue;
+    }
+    for (const neighbor of adjacencyMap[last] || []) {
+      if (!path.includes(neighbor)) {
+        queue.push([...path, neighbor]);
+      }
+    }
+  }
+  return result;
+}
+

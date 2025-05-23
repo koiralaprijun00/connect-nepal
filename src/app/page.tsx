@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from 'react';
 import type { Puzzle } from '@/types';
-import { getRandomPuzzle } from '@/lib/puzzle';
+import { getRandomPuzzle, findAllShortestPaths } from '@/lib/puzzle';
 
 import { CombinedHeaderPuzzle } from '@/components/nepal-traversal/CombinedHeaderPuzzle';
 import { MapDisplay } from '@/components/nepal-traversal/MapDisplay';
@@ -30,6 +30,10 @@ export default function NepalTraversalPage() {
   useEffect(() => {
     startNewGame();
   }, []);
+
+  const allShortestPaths = puzzle
+    ? findAllShortestPaths(puzzle.startDistrict, puzzle.endDistrict)
+    : [];
 
   const correctPath: string[] = puzzle ? puzzle.shortestPath.slice(1, -1) : [];
   const required = correctPath.map(d => d.trim().toLowerCase());
@@ -63,16 +67,27 @@ export default function NepalTraversalPage() {
       const newPath = [...userPath, district.trim()];
       setUserPath(newPath);
       setGuessHistory(prev => [...prev, [district.trim()]]);
-      const isCorrect = required.includes(normalizedGuess);
-      const newCorrectGuesses = newPath.filter(d => required.includes(d.trim().toLowerCase()));
+
+      // Check if the guess is part of any valid shortest path's intermediates
+      const isCorrect = allShortestPaths.some(path => {
+        const required = path.slice(1, -1).map(d => d.trim().toLowerCase());
+        return required.includes(normalizedGuess);
+      });
+      // For progress feedback, use the shortest path that matches the most guesses
+      let bestMatch = { matched: 0, total: 0 };
+      allShortestPaths.forEach(path => {
+        const required = path.slice(1, -1).map(d => d.trim().toLowerCase());
+        const matched = newPath.filter(d => required.includes(d.trim().toLowerCase())).length;
+        if (matched > bestMatch.matched) bestMatch = { matched, total: required.length };
+      });
       if (!isCorrect) {
         setLatestGuessResult({ type: 'error', message: 'Incorrect. Try again!' });
       } else if (!isGameWon) {
-        setLatestGuessResult({ type: 'success', message: `Correct! Keep going (${newCorrectGuesses.length}/${required.length})` });
+        setLatestGuessResult({ type: 'success', message: `Correct! Keep going (${bestMatch.matched}/${bestMatch.total})` });
       }
       setIsSubmittingGuess(false);
     },
-    [puzzle, userPath, required, isGameWon]
+    [puzzle, userPath, isGameWon, allShortestPaths]
   );
   
   if (!puzzle) {
