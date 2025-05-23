@@ -23,15 +23,22 @@ export function CombinedHeaderPuzzle({ startDistrict, endDistrict }: CombinedHea
 
         {/* Description with temple theme */}
         <p className="mb-4 text-base text-muted-foreground">
-          🏔️ Discover the shortest path through the majestic districts of Nepal! 🏔️
+          Discover the shortest path through the majestic districts of Nepal!
         </p>
 
-        {/* Travel path with temple styling */}
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 temple-border">
-          <MapPin className="h-6 w-6 text-secondary" />
-          <p className="text-foreground text-lg font-medium">
-            Travel from <span className="gradient-text-static text-xl font-bold">{startDistrict}</span> to <span className="gradient-text-static text-xl font-bold">{endDistrict}</span>
-          </p>
+        {/* Travel path with new styling */}
+        <div className="inline-flex items-center gap-3 rounded-lg">
+          <span className="flex items-center justify-center">
+            <MapPin className="h-4 w-4 text-sexondary" />
+          </span>
+          <span className="text-foreground text-md font-medium">Travel from</span>
+          <span className="px-6 py-1 rounded-md text-2xl font-semibold text-black bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500">
+            {startDistrict.charAt(0).toUpperCase() + startDistrict.slice(1)}
+          </span>
+          <span className="text-3xl text-secondary mx-1">&#8594;</span>
+          <span className="px-6 py-1 rounded-md text-2xl font-semibold text-black bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500">
+            {endDistrict.charAt(0).toUpperCase() + endDistrict.slice(1)}
+          </span>
         </div>
       </div>
     </div>
