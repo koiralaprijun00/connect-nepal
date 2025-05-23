@@ -4,19 +4,16 @@ import { getRandomPuzzle } from '@/lib/puzzle';
 import { useOptimizedGame, GameStorage } from '@/hooks/useOptimizedGame';
 import { GameHeader } from '@/components/game/GameHeader';
 import { GameModeSelector } from '@/components/game/GameModeSelector';
-import { GameStats } from '@/components/game/GameStats';
 import { ClassicMode } from '@/components/game/modes/ClassicMode';
 import { SequentialMode } from '@/components/game/modes/SequentialMode';
 import { TimeAttackMode } from '@/components/game/modes/TimeAttackMode';
-import { DailyChallenge } from '@/components/game/modes/DailyChallenge';
 import { AchievementToast } from '@/components/AchievementToast';
 import { GameOverModal } from '@/components/GameOverModal';
 
 const GAME_MODES = [
   { id: 'classic', name: 'Classic', description: 'Find all districts in any order' },
   { id: 'sequential', name: 'Sequential', description: 'Build path step by step' },
-  { id: 'timeAttack', name: 'Time Attack', description: 'Race against the clock' },
-  { id: 'challenge', name: 'Daily Challenge', description: 'Special daily puzzle' }
+  { id: 'timeAttack', name: 'Time Attack', description: 'Race against the clock' }
 ];
 
 export default function NepalTraversalPage() {
@@ -120,8 +117,6 @@ export default function NepalTraversalPage() {
         return <SequentialMode {...commonProps} />;
       case 'timeAttack':
         return <TimeAttackMode {...commonProps} />;
-      case 'challenge':
-        return <DailyChallenge {...commonProps} />;
       default:
         return <ClassicMode {...commonProps} />;
     }
@@ -139,13 +134,6 @@ export default function NepalTraversalPage() {
         currentMode={state.mode}
         modes={GAME_MODES}
         onModeChange={actions.setMode}
-      />
-      <GameStats
-        score={state.currentScore}
-        timeElapsed={state.timeElapsed}
-        streak={state.gameSession.streak}
-        remaining={remaining}
-        accuracy={Math.round((state.guessHistory.filter(g => g.isCorrect).length / Math.max(1, state.guessHistory.length)) * 100)}
       />
       {renderGameMode()}
       <div className="flex justify-center">
