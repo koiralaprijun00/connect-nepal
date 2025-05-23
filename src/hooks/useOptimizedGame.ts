@@ -108,45 +108,67 @@ export function useOptimizedGame(initialPuzzle: Puzzle) {
   // Derive userPath from guessHistory
   const userPath = useMemo(() => state.guessHistory.map(g => g.district), [state.guessHistory]);
 
-  // Memoized correct path (single path, for feedback)
+  // Get all possible shortest paths between start and end
+  const allValidPaths = useMemo(() => {
+    return findAllShortestPaths(state.puzzle.startDistrict, state.puzzle.endDistrict, DISTRICT_ADJACENCY);
+  }, [state.puzzle.startDistrict, state.puzzle.endDistrict]);
+
+  // Get all unique intermediate districts (for feedback and display)
+  const allCorrectIntermediates = useMemo(() => {
+    return new Set(
+      allValidPaths.flatMap(path => path.slice(1, -1).map(d => d.trim().toLowerCase()))
+    );
+  }, [allValidPaths]);
+
+  // FIXED WIN CONDITION: Player completes ANY one valid path
+  const isGameWon = useMemo(() => {
+    const userPathSet = new Set(userPath.map(d => d.trim().toLowerCase()));
+    // Check if user has guessed all intermediates for ANY complete path
+    return allValidPaths.some(path => {
+      const intermediates = path.slice(1, -1).map(d => d.trim().toLowerCase());
+      return intermediates.every(district => userPathSet.has(district));
+    });
+  }, [allValidPaths, userPath]);
+
+  // For single-path feedback (used by some components)
   const correctPath = useMemo(() =>
     state.puzzle.shortestPath.slice(1, -1).map(d => d.trim().toLowerCase()),
     [state.puzzle.shortestPath]
   );
 
-  // Win condition: user guesses cover all unique intermediates from any valid shortest path
-  const allCorrectIntermediates = useMemo(() => {
-    const allPaths = findAllShortestPaths(state.puzzle.startDistrict, state.puzzle.endDistrict, DISTRICT_ADJACENCY);
-    return new Set(
-      allPaths.flatMap(path => path.slice(1, -1).map(d => d.trim().toLowerCase()))
-    );
-  }, [state.puzzle.startDistrict, state.puzzle.endDistrict]);
-
-  const isGameWon = useMemo(() => {
-    const userPathSet = new Set(userPath.map(d => d.trim().toLowerCase()));
-    return Array.from(allCorrectIntermediates).every(d => userPathSet.has(d));
-  }, [allCorrectIntermediates, userPath]);
-
-  // Guess handler
+  // Guess handler with error handling
   const makeGuess = useCallback((district: string) => {
-    const feedback = FeedbackSystem.getFeedbackForGuess(
-      district,
-      state.puzzle.shortestPath.slice(1, -1),
-      DISTRICT_ADJACENCY,
-      state.puzzle.startDistrict,
-      state.puzzle.endDistrict
-    );
-    const isCorrect = feedback.type === 'perfect';
-    const guessResult: GuessResult = {
-      district,
-      isCorrect,
-      feedback: feedback.type,
-      timestamp: Date.now(),
-      distanceFromPath: feedback.distanceFromPath,
-    };
-    dispatch({ type: 'MAKE_GUESS', district, guessResult });
-    dispatch({ type: 'SET_FEEDBACK', feedback: { type: feedback.type, message: feedback.message } });
-  }, [state.puzzle, userPath.length]);
+    try {
+      const feedback = FeedbackSystem.getFeedbackForGuess(
+        district,
+        state.puzzle.shortestPath.slice(1, -1),
+        DISTRICT_ADJACENCY,
+        state.puzzle.startDistrict,
+        state.puzzle.endDistrict
+      );
+      const isCorrect = feedback.type === 'perfect';
+      const guessResult: GuessResult = {
+        district,
+        isCorrect,
+        feedback: feedback.type,
+        timestamp: Date.now(),
+        distanceFromPath: feedback.distanceFromPath,
+      };
+      dispatch({ type: 'MAKE_GUESS', district, guessResult });
+      dispatch({ type: 'SET_FEEDBACK', feedback: { type: feedback.type, message: feedback.message } });
+    } catch (error) {
+      console.error('Error making guess:', error);
+      // Fallback feedback for error cases
+      const errorResult: GuessResult = {
+        district,
+        isCorrect: false,
+        feedback: 'invalid',
+        timestamp: Date.now(),
+        distanceFromPath: Infinity,
+      };
+      dispatch({ type: 'MAKE_GUESS', district, guessResult: errorResult });
+    }
+  }, [state.puzzle]); // Removed userPath.length dependency
 
   const undoGuess = useCallback(() => {
     dispatch({ type: 'UNDO_GUESS' });
