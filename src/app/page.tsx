@@ -17,15 +17,7 @@ export default function NepalTraversalPage() {
   const [initialPuzzle] = useState(() => getRandomPuzzle(true, 6));
   const { state, actions } = useOptimizedGame(initialPuzzle);
   const [showAchievement, setShowAchievement] = useState<any>(null);
-  const [showGameOver, setShowGameOver] = useState(false);
   const [achievements, setAchievements] = useState<string[]>([]);
-
-  // Game over detection
-  useEffect(() => {
-    if (state.isGameWon && !showGameOver) {
-      setTimeout(() => setShowGameOver(true), 1000);
-    }
-  }, [state.isGameWon, showGameOver]);
 
   // Achievement checking
   useEffect(() => {
@@ -63,7 +55,6 @@ export default function NepalTraversalPage() {
   const handleNewGame = () => {
     const newPuzzle = getRandomPuzzle(true, 6);
     actions.startNewGame(newPuzzle);
-    setShowGameOver(false);
   };
 
   const handleShare = () => {
@@ -81,12 +72,8 @@ export default function NepalTraversalPage() {
       g.distanceFromPath === 1 ? '🟧' :
       g.distanceFromPath === 2 ? '🟦' : '⬜️'
     ).join('');
-    return `Nepal Traversal ${state.mode}\nScore: ${state.currentScore}\n${emojiGrid}`;
+    return `Nepal Traversal ${state.mode}\n${emojiGrid}`;
   };
-
-  const remaining = state.correctPath.length - state.userPath.filter(d =>
-    state.correctPath.includes(d.toLowerCase())
-  ).length;
 
   const renderGameMode = () => {
     const commonProps = {

@@ -30,7 +30,6 @@ interface GameState {
   hints: { used: boolean; count: number };
   mode: string;
   lastFeedback: { type: string; message: string } | null;
-  timeElapsed: number;
 }
 
 type GameAction =
@@ -39,8 +38,7 @@ type GameAction =
   | { type: 'USE_HINT' }
   | { type: 'NEW_GAME'; puzzle: Puzzle }
   | { type: 'SET_MODE'; mode: string }
-  | { type: 'SET_FEEDBACK'; feedback: { type: string; message: string } | null }
-  | { type: 'SET_TIME_ELAPSED'; timeElapsed: number };
+  | { type: 'SET_FEEDBACK'; feedback: { type: string; message: string } | null };
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -81,15 +79,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         },
         hints: { used: false, count: 0 },
         lastFeedback: null,
-        timeElapsed: 0,
       };
     }
     case 'SET_MODE':
       return { ...state, mode: action.mode };
     case 'SET_FEEDBACK':
       return { ...state, lastFeedback: action.feedback };
-    case 'SET_TIME_ELAPSED':
-      return { ...state, timeElapsed: action.timeElapsed };
     default:
       return state;
   }
@@ -112,7 +107,6 @@ export function useOptimizedGame(initialPuzzle: Puzzle) {
     hints: { used: false, count: 0 },
     mode: 'classic',
     lastFeedback: null,
-    timeElapsed: 0,
   });
 
   // Memoized correct path
@@ -126,16 +120,6 @@ export function useOptimizedGame(initialPuzzle: Puzzle) {
     const userPathSet = new Set(state.userPath.map(d => d.trim().toLowerCase()));
     return correctPath.every(d => userPathSet.has(d));
   }, [correctPath, state.userPath]);
-
-  // Efficient currentScore
-  const currentScore = useMemo(() =>
-    GameScoring.calculateScore(
-      state.gameSession,
-      state.timeElapsed,
-      state.guessHistory.length
-    ),
-    [state.gameSession, state.timeElapsed, state.guessHistory.length]
-  );
 
   // Guess handler
   const makeGuess = useCallback((district: string) => {
@@ -173,15 +157,10 @@ export function useOptimizedGame(initialPuzzle: Puzzle) {
     dispatch({ type: 'SET_MODE', mode });
   }, []);
 
-  const updateTime = useCallback((timeElapsed: number) => {
-    dispatch({ type: 'SET_TIME_ELAPSED', timeElapsed });
-  }, []);
-
   return {
     state: {
       ...state,
       isGameWon,
-      currentScore,
       correctPath,
     },
     actions: {
@@ -190,7 +169,6 @@ export function useOptimizedGame(initialPuzzle: Puzzle) {
       useHint,
       startNewGame,
       setMode,
-      updateTime,
     },
   };
 }

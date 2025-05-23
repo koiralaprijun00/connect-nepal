@@ -53,14 +53,6 @@ export class PathCache {
     }
     return null;
   }
-  
-  static clearCache(): void {
-    this.cache.clear();
-  }
-  
-  static getCacheSize(): number {
-    return this.cache.size;
-  }
 }
 
 // Optimized district filtering with debouncing

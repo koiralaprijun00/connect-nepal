@@ -38,58 +38,6 @@ export interface HintState {
   count: number;
 }
 
-// Enhanced Scoring System
-export class GameScoring {
-  private static readonly BASE_SCORE = 1000;
-  private static readonly WRONG_GUESS_PENALTY = 50;
-  private static readonly TIME_BONUS_PER_SECOND = 10;
-  private static readonly PERFECT_BONUS = 200;
-  private static readonly HINT_PENALTY = 100;
-
-  static calculateScore(session: GameSession, elapsedSeconds: number, totalGuesses: number): number {
-    let score = this.BASE_SCORE;
-    const difficultyMultiplier = {
-      easy: 1.0,
-      medium: 1.5,
-      hard: 2.0,
-      any: 1.2
-    }[session.difficulty];
-    const correctLength = session.puzzle ? session.puzzle.shortestPath.length - 2 : 0;
-    const wrongGuesses = totalGuesses - correctLength;
-    score -= wrongGuesses * this.WRONG_GUESS_PENALTY;
-    const timeBonus = Math.max(0, (300 - elapsedSeconds) * this.TIME_BONUS_PER_SECOND);
-    score += timeBonus;
-    if (wrongGuesses === 0) {
-      score += this.PERFECT_BONUS;
-    }
-    score -= session.hintsUsed * this.HINT_PENALTY;
-    score *= Math.pow(1.1, Math.min(session.streak, 10));
-    score *= difficultyMultiplier;
-    return Math.max(0, Math.round(score));
-  }
-}
-
-// Progressive Difficulty System
-export class DifficultyProgression {
-  static getDailyDifficulty(daysSinceStart: number): PuzzleDifficulty {
-    const cycle = daysSinceStart % 7;
-    if (cycle < 3) return 'easy';
-    if (cycle < 6) return 'medium';
-    return 'hard';
-  }
-
-  static getDynamicGuessLimit(pathLength: number, difficulty: PuzzleDifficulty): number {
-    const baseLimit = pathLength - 2; // Intermediate districts
-    const difficultyMultiplier = {
-      easy: 3,
-      medium: 2,
-      hard: 1.5,
-      any: 2
-    }[difficulty];
-    return Math.max(3, Math.ceil(baseLimit * difficultyMultiplier));
-  }
-}
-
 // Enhanced Feedback System
 export class FeedbackSystem {
   static getFeedbackForGuess(
