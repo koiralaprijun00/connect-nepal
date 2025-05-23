@@ -1,4 +1,3 @@
-
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { NepalDistrictMap } from './NepalDistrictMap'; // Import the new SVG map component

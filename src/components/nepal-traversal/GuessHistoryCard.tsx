@@ -3,14 +3,12 @@ import { CheckCircle, XCircle } from 'lucide-react';
 
 interface GuessHistoryCardProps {
   userPath: string[];
-  correctPath: string[];
+  allCorrectIntermediates: Set<string>;
   startDistrict: string;
   endDistrict: string;
 }
 
-export const GuessHistoryCard: React.FC<GuessHistoryCardProps> = ({ userPath, correctPath, startDistrict, endDistrict }) => {
-  // Only intermediate districts are correct
-  const correctSet = new Set(correctPath.slice(1, -1).map(d => d.trim().toLowerCase()));
+export const GuessHistoryCard: React.FC<GuessHistoryCardProps> = ({ userPath, allCorrectIntermediates, startDistrict, endDistrict }) => {
   return (
     <div className="p-4 rounded-lg border bg-muted text-muted-foreground shadow-sm h-full max-h-[500px] overflow-y-auto">
       <div className="text-base font-semibold mb-2">Your Guesses</div>
@@ -21,7 +19,7 @@ export const GuessHistoryCard: React.FC<GuessHistoryCardProps> = ({ userPath, co
           </div>
         ) : (
           userPath.map((district, idx) => {
-            const isCorrect = correctSet.has(district.trim().toLowerCase());
+            const isCorrect = allCorrectIntermediates.has(district.trim().toLowerCase());
             return (
               <div key={idx} className="flex items-center gap-2">
                 {isCorrect ? (

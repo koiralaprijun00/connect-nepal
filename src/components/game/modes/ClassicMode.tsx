@@ -14,6 +14,7 @@ interface ClassicModeProps {
   onHint: () => void;
   isGameWon: boolean;
   lastFeedback: { type: string; message: string } | null;
+  allCorrectIntermediates: Set<string>;
 }
 
 export function ClassicMode({
@@ -24,7 +25,8 @@ export function ClassicMode({
   onUndo,
   onHint,
   isGameWon,
-  lastFeedback
+  lastFeedback,
+  allCorrectIntermediates
 }: ClassicModeProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -54,7 +56,7 @@ export function ClassicMode({
         <div className="w-[30%]">
           <GuessHistoryCard
             userPath={userPath}
-            correctPath={puzzle.shortestPath}
+            allCorrectIntermediates={allCorrectIntermediates}
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
           />

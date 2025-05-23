@@ -1,6 +1,6 @@
 import { useReducer, useCallback, useMemo } from 'react';
-import { FeedbackSystem, GameScoring, DifficultyProgression, GuessResult, GameSession } from '@/lib/gameLogic';
-import { DISTRICT_ADJACENCY } from '@/lib/puzzle';
+import { FeedbackSystem, GuessResult, GameSession } from '@/lib/gameLogic';
+import { DISTRICT_ADJACENCY, findAllShortestPaths } from '@/lib/puzzle';
 import type { Puzzle } from '@/types';
 
 // Memoized path cache to avoid recalculating BFS
@@ -24,7 +24,6 @@ class PathCache {
 
 interface GameState {
   puzzle: Puzzle;
-  userPath: string[];
   guessHistory: GuessResult[];
   gameSession: GameSession;
   hints: { used: boolean; count: number };
@@ -45,14 +44,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'MAKE_GUESS':
       return {
         ...state,
-        userPath: [...state.userPath, action.district],
         guessHistory: [...state.guessHistory, action.guessResult],
         lastFeedback: { type: action.guessResult.feedback, message: action.guessResult.feedback },
       };
     case 'UNDO_GUESS':
       return {
         ...state,
-        userPath: state.userPath.slice(0, -1),
         guessHistory: state.guessHistory.slice(0, -1),
         lastFeedback: null,
       };
@@ -68,13 +65,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         puzzle: action.puzzle,
-        userPath: [],
         guessHistory: [],
         gameSession: {
           ...state.gameSession,
           startTime: now,
           score: 0,
           hintsUsed: 0,
+          perfectRuns: 0,
           puzzle: action.puzzle,
         },
         hints: { used: false, count: 0 },
@@ -93,7 +90,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 export function useOptimizedGame(initialPuzzle: Puzzle) {
   const [state, dispatch] = useReducer(gameReducer, {
     puzzle: initialPuzzle,
-    userPath: [],
     guessHistory: [],
     gameSession: {
       startTime: Date.now(),
@@ -109,24 +105,36 @@ export function useOptimizedGame(initialPuzzle: Puzzle) {
     lastFeedback: null,
   });
 
-  // Memoized correct path
+  // Derive userPath from guessHistory
+  const userPath = useMemo(() => state.guessHistory.map(g => g.district), [state.guessHistory]);
+
+  // Memoized correct path (single path, for feedback)
   const correctPath = useMemo(() =>
     state.puzzle.shortestPath.slice(1, -1).map(d => d.trim().toLowerCase()),
     [state.puzzle.shortestPath]
   );
 
-  // Efficient isGameWon
+  // Win condition: user guesses cover all unique intermediates from any valid shortest path
+  const allCorrectIntermediates = useMemo(() => {
+    const allPaths = findAllShortestPaths(state.puzzle.startDistrict, state.puzzle.endDistrict, DISTRICT_ADJACENCY);
+    return new Set(
+      allPaths.flatMap(path => path.slice(1, -1).map(d => d.trim().toLowerCase()))
+    );
+  }, [state.puzzle.startDistrict, state.puzzle.endDistrict]);
+
   const isGameWon = useMemo(() => {
-    const userPathSet = new Set(state.userPath.map(d => d.trim().toLowerCase()));
-    return correctPath.every(d => userPathSet.has(d));
-  }, [correctPath, state.userPath]);
+    const userPathSet = new Set(userPath.map(d => d.trim().toLowerCase()));
+    return Array.from(allCorrectIntermediates).every(d => userPathSet.has(d));
+  }, [allCorrectIntermediates, userPath]);
 
   // Guess handler
   const makeGuess = useCallback((district: string) => {
     const feedback = FeedbackSystem.getFeedbackForGuess(
       district,
       state.puzzle.shortestPath.slice(1, -1),
-      DISTRICT_ADJACENCY
+      DISTRICT_ADJACENCY,
+      state.puzzle.startDistrict,
+      state.puzzle.endDistrict
     );
     const isCorrect = feedback.type === 'perfect';
     const guessResult: GuessResult = {
@@ -138,7 +146,7 @@ export function useOptimizedGame(initialPuzzle: Puzzle) {
     };
     dispatch({ type: 'MAKE_GUESS', district, guessResult });
     dispatch({ type: 'SET_FEEDBACK', feedback: { type: feedback.type, message: feedback.message } });
-  }, [state.puzzle, state.userPath.length]);
+  }, [state.puzzle, userPath.length]);
 
   const undoGuess = useCallback(() => {
     dispatch({ type: 'UNDO_GUESS' });
@@ -162,6 +170,8 @@ export function useOptimizedGame(initialPuzzle: Puzzle) {
       ...state,
       isGameWon,
       correctPath,
+      allCorrectIntermediates,
+      userPath,
     },
     actions: {
       makeGuess,

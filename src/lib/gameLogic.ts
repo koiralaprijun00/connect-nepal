@@ -43,9 +43,26 @@ export class FeedbackSystem {
   static getFeedbackForGuess(
     guess: string,
     correctPath: string[],
-    adjacencyMap: Record<string, string[]>
+    adjacencyMap: Record<string, string[]>,
+    startDistrict?: string,
+    endDistrict?: string
   ): { type: FeedbackType; message: string; distanceFromPath: number } {
     const normalizedGuess = guess.toLowerCase().trim();
+    // Block start/end guesses
+    if (startDistrict && normalizedGuess === startDistrict.toLowerCase()) {
+      return {
+        type: 'invalid',
+        message: 'You cannot guess the start district.',
+        distanceFromPath: Infinity
+      };
+    }
+    if (endDistrict && normalizedGuess === endDistrict.toLowerCase()) {
+      return {
+        type: 'invalid',
+        message: 'You cannot guess the end district.',
+        distanceFromPath: Infinity
+      };
+    }
     const pathSet = new Set(correctPath.map(d => d.toLowerCase()));
     if (pathSet.has(normalizedGuess)) {
       return {

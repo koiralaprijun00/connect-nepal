@@ -48,11 +48,16 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
   function handleFormSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (isGameWon) return;
-    if (!guessDistrict.trim()) {
+    const input = guessDistrict.trim();
+    if (!input) {
       setError('Please enter a district');
       return;
     }
-    onSubmit([guessDistrict.trim()]);
+    if ([startDistrict, endDistrict].map(d => d.toLowerCase()).includes(input.toLowerCase())) {
+      setError('You cannot guess the start or end district.');
+      return;
+    }
+    onSubmit([input]);
     setGuessDistrict("");
     setPopoverOpen(false);
     setHighlightedIndex(null);
@@ -63,6 +68,10 @@ export const GuessInput: React.FC<GuessInputProps> = ({ onSubmit, isLoading, sta
     if (isGameWon) return;
     const input = guessDistrict.trim();
     if (!input) return;
+    if ([startDistrict, endDistrict].map(d => d.toLowerCase()).includes(input.toLowerCase())) {
+      setError('You cannot guess the start or end district.');
+      return;
+    }
     // Check if input matches a valid district (not start/end)
     const match = DISTRICTS_NEPAL.find(
       (d: string) => d.toLowerCase() === input.toLowerCase() &&

@@ -82,7 +82,8 @@ export default function NepalTraversalPage() {
       onUndo: actions.undoGuess,
       onHint: actions.useHint,
       isGameWon: state.isGameWon,
-      lastFeedback: state.lastFeedback
+      lastFeedback: state.lastFeedback,
+      allCorrectIntermediates: state.allCorrectIntermediates,
     };
     return <ClassicMode {...commonProps} />;
   };
