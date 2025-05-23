@@ -6,14 +6,12 @@ import { GameHeader } from '@/components/game/GameHeader';
 import { GameModeSelector } from '@/components/game/GameModeSelector';
 import { ClassicMode } from '@/components/game/modes/ClassicMode';
 import { SequentialMode } from '@/components/game/modes/SequentialMode';
-import { TimeAttackMode } from '@/components/game/modes/TimeAttackMode';
 import { AchievementToast } from '@/components/AchievementToast';
 import { GameOverModal } from '@/components/GameOverModal';
 
 const GAME_MODES = [
   { id: 'classic', name: 'Classic', description: 'Find all districts in any order' },
-  { id: 'sequential', name: 'Sequential', description: 'Build path step by step' },
-  { id: 'timeAttack', name: 'Time Attack', description: 'Race against the clock' }
+  { id: 'sequential', name: 'Sequential', description: 'Build path step by step' }
 ];
 
 export default function NepalTraversalPage() {
@@ -115,8 +113,6 @@ export default function NepalTraversalPage() {
     switch (state.mode) {
       case 'sequential':
         return <SequentialMode {...commonProps} />;
-      case 'timeAttack':
-        return <TimeAttackMode {...commonProps} />;
       default:
         return <ClassicMode {...commonProps} />;
     }
