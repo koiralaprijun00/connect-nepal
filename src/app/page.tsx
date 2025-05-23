@@ -4,13 +4,11 @@ import { getRandomPuzzle } from '@/lib/puzzle';
 import { useOptimizedGame, GameStorage } from '@/hooks/useOptimizedGame';
 import { GameModeSelector } from '@/components/game/GameModeSelector';
 import { ClassicMode } from '@/components/game/modes/ClassicMode';
-import { SequentialMode } from '@/components/game/modes/SequentialMode';
 import { AchievementToast } from '@/components/AchievementToast';
 import GameHeader from '@/components/game/GameHeader';
 
 const GAME_MODES = [
-  { id: 'classic', name: 'Classic', description: 'Find all districts in any order' },
-  { id: 'sequential', name: 'Sequential', description: 'Build path step by step' }
+  { id: 'classic', name: 'Classic', description: 'Find all districts in any order' }
 ];
 
 export default function NepalTraversalPage() {
@@ -86,12 +84,7 @@ export default function NepalTraversalPage() {
       isGameWon: state.isGameWon,
       lastFeedback: state.lastFeedback
     };
-    switch (state.mode) {
-      case 'sequential':
-        return <SequentialMode {...commonProps} />;
-      default:
-        return <ClassicMode {...commonProps} />;
-    }
+    return <ClassicMode {...commonProps} />;
   };
 
   return (
