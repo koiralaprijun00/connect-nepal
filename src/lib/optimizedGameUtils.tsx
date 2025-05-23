@@ -6,18 +6,27 @@ import type { Puzzle } from '@/types';
 export class PathCache {
   private static cache = new Map<string, string[]>();
   
+  // Key format: 'start->end' (all lowercase)
+  static getKey(start: string, end: string): string {
+    return `${start.toLowerCase()}->${end.toLowerCase()}`;
+  }
+  static get(start: string, end: string): string[] | null {
+    const key = this.getKey(start, end);
+    return this.cache.get(key) || null;
+  }
+  static set(start: string, end: string, path: string[]): void {
+    const key = this.getKey(start, end);
+    this.cache.set(key, path);
+  }
   static getShortestPath(start: string, end: string, adjacencyMap: Record<string, string[]>): string[] | null {
-    const key = `${start.toLowerCase()}->${end.toLowerCase()}`;
-    
+    const key = this.getKey(start, end);
     if (this.cache.has(key)) {
       return this.cache.get(key)!;
     }
-    
     const path = this.computeBFS(start, end, adjacencyMap);
     if (path) {
       this.cache.set(key, path);
     }
-    
     return path;
   }
   
@@ -231,6 +240,7 @@ export interface OptimizedGameState {
   startTime: number;
   gameStatus: 'playing' | 'won' | 'lost';
   streak: number;
+  isGameWon: boolean;
 }
 
 export function gameReducer(state: OptimizedGameState, action: GameAction): OptimizedGameState {
@@ -254,7 +264,8 @@ export function gameReducer(state: OptimizedGameState, action: GameAction): Opti
         ...state,
         guesses: newGuesses,
         gameStatus: gameWon ? 'won' : state.gameStatus,
-        streak: gameWon ? state.streak + 1 : state.streak
+        streak: gameWon ? state.streak + 1 : state.streak,
+        isGameWon: gameWon
       };
     
     case 'UNDO_GUESS':
@@ -277,7 +288,8 @@ export function gameReducer(state: OptimizedGameState, action: GameAction): Opti
         guesses: [],
         hintsUsed: 0,
         startTime: Date.now(),
-        gameStatus: 'playing'
+        gameStatus: 'playing',
+        isGameWon: false
       };
     
     case 'UPDATE_SCORE':
@@ -300,10 +312,19 @@ export function useOptimizedGame(adjacencyMap: Record<string, string[]>) {
     hintsUsed: 0,
     startTime: Date.now(),
     gameStatus: 'playing' as const,
-    streak: 0
+    streak: 0,
+    isGameWon: false
   });
   
   const { validateGuess } = useGuessValidation(state.puzzle, adjacencyMap);
+  
+  // Add isGameWon using Set for O(1) lookup
+  const isGameWon = useMemo(() => {
+    if (!state.puzzle) return false;
+    const correctPath = state.puzzle.shortestPath.slice(1, -1).map(d => d.trim().toLowerCase());
+    const userPathSet = new Set(state.guesses.map(g => g.district.trim().toLowerCase()));
+    return correctPath.every(d => userPathSet.has(d));
+  }, [state.puzzle, state.guesses]);
   
   const makeGuess = useCallback((district: string) => {
     const result = validateGuess(district);
@@ -332,7 +353,10 @@ export function useOptimizedGame(adjacencyMap: Record<string, string[]>) {
   }, []);
   
   return {
-    state,
+    state: {
+      ...state,
+      isGameWon,
+    },
     actions: {
       makeGuess,
       undoGuess,
