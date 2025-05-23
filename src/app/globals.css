@@ -170,23 +170,23 @@
     stroke-width: 0.5px;
     transition: all 0.3s ease-in-out;
   }
-  .district-default:hover {
-    fill: hsl(var(--primary) / 0.2); /* Light golden glow on hover */
+  /* .district-default:hover {
+    fill: hsl(var(--primary) / 0.2); 
     stroke: hsl(var(--primary));
     stroke-width: 1px;
     filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.3));
-  }
+  } */
   .district-start {
-    fill: hsl(var(--secondary)) !important; /* Bright yellow start */
+    fill: hsl(120, 70%, 40%) !important; /* Green for start */
     stroke: hsl(var(--foreground)) !important;
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 6px hsl(var(--secondary) / 0.4));
+    /* filter: drop-shadow(0 0 6px hsl(120, 70%, 40%, 0.4)); */
   }
   .district-end {
-    fill: hsl(var(--accent)) !important; /* Pink/magenta end */
+    fill: hsl(var(--destructive)) !important; /* Red for end */
     stroke: hsl(var(--foreground)) !important;
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 6px hsl(var(--accent) / 0.4));
+    /* filter: drop-shadow(0 0 6px hsl(var(--destructive) / 0.4)); */
   }
   .district-correct-path {
     fill: hsl(var(--primary) / 0.3); /* Light golden path */

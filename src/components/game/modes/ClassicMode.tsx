@@ -42,18 +42,15 @@ export function ClassicMode({
         isGameWon={isGameWon}
       />
       <div className="flex flex-row gap-4">
-        <div className="w-[70%]">
+        <div className="flex-1">
           <InteractiveNepalMap
             guessedPath={userPath}
             correctPath={puzzle.shortestPath}
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
-            onDistrictClick={onGuess}
-            showAdjacencies={false}
-            showHints={false}
           />
         </div>
-        <div className="w-[30%]">
+        <div className="max-w-xs w-full">
           <GuessHistoryCard
             userPath={userPath}
             allCorrectIntermediates={allCorrectIntermediates}
