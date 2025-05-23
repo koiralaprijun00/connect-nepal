@@ -70,3 +70,5 @@ The function automatically validates that:
 ## Getting Started
 
 To get started with development, take a look at `src/app/page.tsx`.
+
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/koiralaprijun00/connect-nepal?utm_source=oss&utm_medium=github&utm_campaign=koiralaprijun00%2Fconnect-nepal&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
