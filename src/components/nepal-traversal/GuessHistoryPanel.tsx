@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle, XCircle} from 'lucide-react';
+import { findAllShortestPaths } from '@/lib/puzzle';
 
 interface GuessHistoryPanelProps {
   guessHistory: string[][];
@@ -9,8 +10,11 @@ interface GuessHistoryPanelProps {
 }
 
 export function GuessHistoryPanel({ guessHistory, startDistrict, endDistrict, correctPath }: GuessHistoryPanelProps) {
-  // Set of required intermediate districts (order doesn't matter)
-  const requiredSet = new Set(correctPath.slice(1, -1).map(d => d.trim().toLowerCase()));
+  // Set of all unique intermediate districts from all valid shortest paths
+  const allShortestPaths = findAllShortestPaths(startDistrict, endDistrict);
+  const allIntermediates = new Set(
+    allShortestPaths.flatMap(path => path.slice(1, -1).map(d => d.trim().toLowerCase()))
+  );
 
   return (
     <div className="p-4 rounded-lg border bg-muted text-muted-foreground shadow-sm">
@@ -22,7 +26,7 @@ export function GuessHistoryPanel({ guessHistory, startDistrict, endDistrict, co
         ) : (
           guessHistory.map((guess, idx) => {
             const district = guess[0];
-            const isCorrect = requiredSet.has(district.trim().toLowerCase());
+            const isCorrect = allIntermediates.has(district.trim().toLowerCase());
             return (
               <div key={idx} className="flex items-center gap-2">
                 {isCorrect ? (

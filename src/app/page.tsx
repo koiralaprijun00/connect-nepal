@@ -19,8 +19,10 @@ export default function NepalTraversalPage() {
   const [latestGuessResult, setLatestGuessResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [guessHistory, setGuessHistory] = useState<string[][]>([]);
 
+  const MAX_GUESSES = 6;
+
   const startNewGame = useCallback(() => {
-    const newPuzzle = getRandomPuzzle(true); // Use auto-generated puzzles
+    const newPuzzle = getRandomPuzzle(true, 6); // Use auto-generated puzzles with max 6 intermediates
     setPuzzle(newPuzzle);
     setUserPath([]);
     setGuessHistory([]);
@@ -57,6 +59,12 @@ export default function NepalTraversalPage() {
     async ([district]: string[]) => {
       if (!puzzle) return;
       setIsSubmittingGuess(true);
+
+      if (userPath.length >= MAX_GUESSES) {
+        setLatestGuessResult({ type: 'error', message: `You can only enter up to ${MAX_GUESSES} districts.` });
+        setIsSubmittingGuess(false);
+        return;
+      }
 
       const normalizedGuess = district.trim().toLowerCase();
       if (userPath.includes(district.trim())) {
