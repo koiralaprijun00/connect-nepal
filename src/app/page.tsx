@@ -2,12 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { getRandomPuzzle } from '@/lib/puzzle';
 import { useOptimizedGame, GameStorage } from '@/hooks/useOptimizedGame';
-import { GameHeader } from '@/components/game/GameHeader';
 import { GameModeSelector } from '@/components/game/GameModeSelector';
 import { ClassicMode } from '@/components/game/modes/ClassicMode';
 import { SequentialMode } from '@/components/game/modes/SequentialMode';
 import { AchievementToast } from '@/components/AchievementToast';
-import { GameOverModal } from '@/components/GameOverModal';
+import GameHeader from '@/components/game/GameHeader';
 
 const GAME_MODES = [
   { id: 'classic', name: 'Classic', description: 'Find all districts in any order' },
@@ -21,15 +20,6 @@ export default function NepalTraversalPage() {
   const [showGameOver, setShowGameOver] = useState(false);
   const [achievements, setAchievements] = useState<string[]>([]);
 
-  // Timer effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - state.gameSession.startTime) / 1000);
-      actions.updateTime(elapsed);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [state.gameSession.startTime, actions]);
-
   // Game over detection
   useEffect(() => {
     if (state.isGameWon && !showGameOver) {
@@ -40,17 +30,17 @@ export default function NepalTraversalPage() {
   // Achievement checking
   useEffect(() => {
     checkAchievements();
-  }, [state.guessHistory, state.timeElapsed, state.isGameWon]);
+  }, [state.guessHistory, state.isGameWon]);
 
   const checkAchievements = () => {
     const newAchievements = [];
     const unlockedAchievements = GameStorage.get('achievements') || [];
-    if (state.isGameWon && state.timeElapsed <= 60 && !unlockedAchievements.includes('speed_demon')) {
+    if (state.isGameWon && !unlockedAchievements.includes('speed_demon')) {
       newAchievements.push({
         id: 'speed_demon',
         emoji: '⚡',
-        label: 'Speed Demon',
-        description: 'Completed puzzle in under 1 minute!'
+        label: 'Puzzle Master',
+        description: 'Completed a puzzle!',
       });
     }
     const wrongGuesses = state.guessHistory.filter(g => !g.isCorrect).length;
@@ -91,7 +81,7 @@ export default function NepalTraversalPage() {
       g.distanceFromPath === 1 ? '🟧' :
       g.distanceFromPath === 2 ? '🟦' : '⬜️'
     ).join('');
-    return `Nepal Traversal ${state.mode}\nScore: ${state.currentScore} | Time: ${state.timeElapsed}s\n${emojiGrid}`;
+    return `Nepal Traversal ${state.mode}\nScore: ${state.currentScore}\n${emojiGrid}`;
   };
 
   const remaining = state.correctPath.length - state.userPath.filter(d =>
@@ -103,7 +93,6 @@ export default function NepalTraversalPage() {
       puzzle: state.puzzle,
       userPath: state.userPath,
       guessHistory: state.guessHistory,
-      timeElapsed: state.timeElapsed,
       onGuess: actions.makeGuess,
       onUndo: actions.undoGuess,
       onHint: actions.useHint,
@@ -120,19 +109,12 @@ export default function NepalTraversalPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-4 space-y-6">
-      <GameHeader
-        puzzle={state.puzzle}
-        mode={state.mode}
-        difficulty={state.gameSession.difficulty}
-        timeElapsed={state.timeElapsed}
-      />
-      <GameModeSelector
-        currentMode={state.mode}
-        modes={GAME_MODES}
-        onModeChange={actions.setMode}
-      />
-      {renderGameMode()}
-      <div className="flex justify-center">
+      <div className="flex items-center justify-between mb-2">
+        <GameHeader
+          startDistrict={state.puzzle.startDistrict}
+          endDistrict={state.puzzle.endDistrict}
+          mode={state.mode}
+        />
         <button
           onClick={handleNewGame}
           className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors shadow-lg"
@@ -140,21 +122,16 @@ export default function NepalTraversalPage() {
           🎮 New Game
         </button>
       </div>
+      <GameModeSelector
+        currentMode={state.mode}
+        modes={GAME_MODES}
+        onModeChange={actions.setMode}
+      />
+      {renderGameMode()}
       {showAchievement && (
         <AchievementToast
           achievement={showAchievement}
           onClose={() => setShowAchievement(null)}
-        />
-      )}
-      {showGameOver && (
-        <GameOverModal
-          isWon={state.isGameWon}
-          score={state.currentScore}
-          timeElapsed={state.timeElapsed}
-          accuracy={Math.round((state.guessHistory.filter(g => g.isCorrect).length / Math.max(1, state.guessHistory.length)) * 100)}
-          shareText={generateShareText()}
-          onNewGame={handleNewGame}
-          onShare={handleShare}
         />
       )}
     </div>

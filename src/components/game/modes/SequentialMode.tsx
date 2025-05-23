@@ -2,12 +2,13 @@ import React from 'react';
 import type { Puzzle } from '@/types';
 import { GuessResult } from '@/lib/gameLogic';
 import { InteractiveNepalMap } from '@/components/InteractiveNepalMap';
+import { GuessInput } from '@/components/nepal-traversal/GuessInput';
+import { GuessHistoryCard } from '@/components/nepal-traversal/GuessHistoryCard';
 
 interface SequentialModeProps {
   puzzle: Puzzle;
   userPath: string[];
   guessHistory: GuessResult[];
-  timeElapsed: number;
   onGuess: (district: string) => void;
   onUndo: () => void;
   onHint: () => void;
@@ -19,7 +20,6 @@ export function SequentialMode({
   puzzle,
   userPath,
   guessHistory,
-  timeElapsed,
   onGuess,
   onUndo,
   onHint,
@@ -30,15 +30,38 @@ export function SequentialMode({
   const nextStep = puzzle.shortestPath[userPath.length + 1];
   return (
     <div className="flex flex-col gap-4">
-      <InteractiveNepalMap
-        guessedPath={userPath}
-        correctPath={puzzle.shortestPath}
+      <GuessInput
+        onSubmit={([district]) => onGuess(district)}
+        isLoading={false}
         startDistrict={puzzle.startDistrict}
         endDistrict={puzzle.endDistrict}
-        onDistrictClick={d => d.toLowerCase() === nextStep?.toLowerCase() && onGuess(d)}
-        showAdjacencies={false}
-        showHints={false}
+        latestGuessResult={lastFeedback ? {
+          type: lastFeedback.type === 'perfect' ? 'success' : 'error',
+          message: lastFeedback.message
+        } : null}
+        isGameWon={isGameWon}
       />
+      <div className="flex flex-row gap-4">
+        <div className="w-[70%]">
+          <InteractiveNepalMap
+            guessedPath={userPath}
+            correctPath={puzzle.shortestPath}
+            startDistrict={puzzle.startDistrict}
+            endDistrict={puzzle.endDistrict}
+            onDistrictClick={d => d.toLowerCase() === nextStep?.toLowerCase() && onGuess(d)}
+            showAdjacencies={false}
+            showHints={false}
+          />
+        </div>
+        <div className="w-[30%]">
+          <GuessHistoryCard
+            userPath={userPath}
+            correctPath={puzzle.shortestPath}
+            startDistrict={puzzle.startDistrict}
+            endDistrict={puzzle.endDistrict}
+          />
+        </div>
+      </div>
     </div>
   );
 } 
