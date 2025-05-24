@@ -41,11 +41,20 @@ export function ClassicMode({
         } : null}
         isGameWon={isGameWon}
       />
+      {/* Display the answer (shortest path) for testing */}
+      <div className="mb-2 p-2 bg-yellow-50 border border-yellow-300 rounded text-yellow-900 text-sm font-mono flex flex-wrap items-center gap-2">
+        <span className="font-bold">Answer:</span>
+        {puzzle.shortestPath.map((district, idx) => (
+          <React.Fragment key={district}>
+            <span>{district}</span>
+            {idx < puzzle.shortestPath.length - 1 && <span className="mx-1">→</span>}
+          </React.Fragment>
+        ))}
+      </div>
       <div className="flex flex-row gap-4">
         <div className="flex-1">
           <InteractiveNepalMap
             guessedPath={userPath}
-            correctPath={puzzle.shortestPath}
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
           />

@@ -57,46 +57,20 @@ export function DebugNepalMap({
     console.groupEnd();
   }, [startDistrict, endDistrict, guessedPath, correctPath]);
 
-  // Find district element with comprehensive search
+  // Find district element with improved search strategy
   const findDistrictElement = useCallback((districtName: string): SVGElement | null => {
     if (!svgRef.current || !districtName) return null;
     const svg = svgRef.current;
-    const searchTerms = [
-      districtName.toLowerCase(),
-      districtName.charAt(0).toUpperCase() + districtName.slice(1).toLowerCase(),
-      districtName.toUpperCase(),
-      districtName.toLowerCase().replace(/\s+/g, ''),
-    ];
-    console.log(`🔍 Searching for district: ${districtName}`);
-    console.log('Search terms:', searchTerms);
-    for (const term of searchTerms) {
-      let element = svg.querySelector(`#${term}`) as SVGElement;
-      if (element) {
-        console.log(`✅ Found via ID: #${term}`, element);
-        return element;
-      }
-      element = svg.querySelector(`path[id="${term}"]`) as SVGElement;
-      if (element) {
-        console.log(`✅ Found via path ID: path[id="${term}"]`, element);
-        return element;
-      }
-      const group = svg.querySelector(`g[id="${term}"]`);
-      if (group) {
-        const path = group.querySelector('path') as SVGElement;
-        if (path) {
-          console.log(`✅ Found via group: g[id="${term}"] path`, path);
-          return path;
-        }
-        console.log(`✅ Found group: g[id="${term}"]`, group);
-        return group as SVGElement;
-      }
-      element = svg.querySelector(`[data-name="${term}"]`) as SVGElement;
-      if (element) {
-        console.log(`✅ Found via data-name: [data-name="${term}"]`, element);
-        return element;
-      }
-    }
-    console.warn(`❌ District not found: ${districtName}`);
+    
+    // Primary search - exact ID match (most reliable)
+    const exactMatch = svg.querySelector(`#${districtName.toLowerCase()}`);
+    if (exactMatch) return exactMatch as SVGElement;
+    
+    // Secondary search - look inside groups
+    const groupMatch = svg.querySelector(`g[id="${districtName}"] path`) || 
+                       svg.querySelector(`g[id="${districtName.toLowerCase()}"] path`);
+    if (groupMatch) return groupMatch as SVGElement;
+    
     return null;
   }, []);
 
@@ -119,35 +93,42 @@ export function DebugNepalMap({
   // Main effect for styling districts (runs only on client)
   useEffect(() => {
     if (!svgRef.current) return;
-    console.group('🎨 Styling Districts');
-    const allElements = svgRef.current.querySelectorAll('path, g');
-    allElements.forEach(element => {
-      element.removeAttribute('style');
+    
+    // 1. First, reset ALL districts to default
+    const allPaths = svgRef.current.querySelectorAll('path.district, g path');
+    allPaths.forEach(element => {
       element.setAttribute('class', 'district-default');
+      element.removeAttribute('style'); // Remove inline styles
     });
+
+    // 2. Apply start district (GREEN) - highest priority
     if (startDistrict) {
-      styleDistrict(startDistrict, 'district-start', '#22c55e');
-    }
-    if (endDistrict) {
-      styleDistrict(endDistrict, 'district-end', '#ef4444');
-    }
-    correctPath.forEach(district => {
-      if (district !== startDistrict && district !== endDistrict) {
-        styleDistrict(district, 'district-correct-path', '#93c5fd');
+      const startEl = findDistrictElement(startDistrict);
+      if (startEl) {
+        startEl.setAttribute('class', 'district-start');
       }
-    });
+    }
+
+    // 3. Apply end district (RED) - highest priority  
+    if (endDistrict) {
+      const endEl = findDistrictElement(endDistrict);
+      if (endEl) {
+        endEl.setAttribute('class', 'district-end');
+      }
+    }
+
+    // 4. Apply guessed districts (only if not start/end)
     guessedPath.forEach(district => {
       if (district !== startDistrict && district !== endDistrict) {
-        const isCorrect = correctSet.has(district.toLowerCase());
-        if (isCorrect) {
-          styleDistrict(district, 'district-guessed-correct', '#fbbf24');
-        } else {
-          styleDistrict(district, 'district-guessed-incorrect', '#f87171');
+        const el = findDistrictElement(district);
+        if (el) {
+          const isCorrect = correctSet.has(district.toLowerCase());
+          el.setAttribute('class', isCorrect ? 'district-guessed-correct' : 'district-guessed-incorrect');
         }
       }
     });
-    console.groupEnd();
-  }, [startDistrict, endDistrict, correctPath, guessedPath, styleDistrict, correctSet]);
+
+  }, [startDistrict, endDistrict, guessedPath, correctPath, findDistrictElement, correctSet]);
 
   // Debug effect
   useEffect(() => {

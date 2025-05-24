@@ -3,14 +3,12 @@ import { DebugNepalMap } from './nepal-traversal/DebugNepalMap';
 
 export function InteractiveNepalMap({
   guessedPath,
-  correctPath,
   startDistrict,
   endDistrict,
   className,
   onDistrictClick
 }: {
   guessedPath: string[];
-  correctPath: string[];
   startDistrict: string;
   endDistrict: string;
   className?: string;
@@ -20,7 +18,7 @@ export function InteractiveNepalMap({
     <div className={`nepal-map-container ${className || ''}`}>
       <DebugNepalMap
         guessedPath={guessedPath}
-        correctPath={correctPath}
+        correctPath={[]}
         startDistrict={startDistrict}
         endDistrict={endDistrict}
         onDistrictClick={onDistrictClick}

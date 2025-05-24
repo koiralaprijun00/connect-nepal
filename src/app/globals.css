@@ -180,26 +180,27 @@
 
   /* Default state for all districts */
   .district-default {
-    fill: #f3f4f6 !important; /* Light gray */
-    stroke: #9ca3af !important; /* Gray border */
-    stroke-width: 0.5px !important;
-    transition: all 0.2s ease-in-out !important;
+    fill: #f3f4f6 !important; 
+    stroke: #9ca3af !important; 
+    stroke-width: 1px !important;
+    transition: all 0.2s ease !important;
+    filter: none !important;
   }
 
   /* Start district - Bright Green */
   .district-start {
-    fill: #22c55e !important; /* Green-500 */
-    stroke: #166534 !important; /* Green-800 */
+    fill: #22c55e !important; /* Bright green */
+    stroke: #166534 !important; 
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.4)) !important;
+    filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.6)) !important;
   }
 
   /* End district - Bright Red */
   .district-end {
-    fill: #ef4444 !important; /* Red-500 */
-    stroke: #991b1b !important; /* Red-800 */
+    fill: #ef4444 !important; /* Bright red */
+    stroke: #991b1b !important; 
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.4)) !important;
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.6)) !important;
   }
 
   /* Correct path districts - Light blue */
@@ -211,20 +212,18 @@
 
   /* Correctly guessed districts - Gold/Yellow */
   .district-guessed-correct {
-    fill: #fbbf24 !important; /* Amber-400 */
-    stroke: #d97706 !important; /* Amber-600 */
+    fill: #fbbf24 !important; /* Gold */
+    stroke: #d97706 !important; 
     stroke-width: 1.5px !important;
     filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.5)) !important;
-    animation: pulse-success 0.5s ease-out !important;
   }
 
   /* Incorrectly guessed districts - Light red */
   .district-guessed-incorrect {
-    fill: #f87171 !important; /* Red-400 */
-    stroke: #dc2626 !important; /* Red-600 */
+    fill: #f87171 !important; /* Light red */
+    stroke: #dc2626 !important; 
     stroke-width: 1px !important;
     filter: drop-shadow(0 0 2px rgba(248, 113, 113, 0.3)) !important;
-    animation: shake-error 0.3s ease-out !important;
   }
 
   /* Hint districts */
