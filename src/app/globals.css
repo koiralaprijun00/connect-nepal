@@ -160,50 +160,173 @@
       hsl(var(--accent))
     ) 1;
   }
-}
 
-/* SVG Map District Styles - Temple Theme with White Background */
-@layer components {
+  /* SVG Map District Styles - Improved Version */
   .district-default {
-    fill: hsl(var(--muted)); /* Light muted background */
-    stroke: hsl(var(--border));
-    stroke-width: 0.5px;
-    transition: all 0.3s ease-in-out;
+    fill: hsl(var(--muted)) !important;
+    stroke: hsl(var(--border)) !important;
+    stroke-width: 0.5px !important;
+    transition: all 0.2s ease-in-out !important;
+    cursor: default !important;
   }
-  /* .district-default:hover {
-    fill: hsl(var(--primary) / 0.2); 
-    stroke: hsl(var(--primary));
-    stroke-width: 1px;
-    filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.3));
-  } */
+
+  /* Hover effect only for interactive districts */
+  .district-default[tabindex]:hover {
+    fill: hsl(var(--muted-foreground) / 0.1) !important;
+    stroke: hsl(var(--border)) !important;
+    stroke-width: 1px !important;
+  }
+
+  /* Start district - prominent green */
   .district-start {
-    fill: hsl(120, 70%, 40%) !important; /* Green for start */
-    stroke: hsl(var(--foreground)) !important;
+    fill: hsl(120, 70%, 50%) !important;
+    stroke: hsl(120, 70%, 30%) !important;
     stroke-width: 2px !important;
-    /* filter: drop-shadow(0 0 6px hsl(120, 70%, 40%, 0.4)); */
+    filter: drop-shadow(0 0 4px hsl(120, 70%, 40% / 0.4)) !important;
   }
+
+  /* End district - prominent red */
   .district-end {
-    fill: hsl(var(--destructive)) !important; /* Red for end */
-    stroke: hsl(var(--foreground)) !important;
+    fill: hsl(0, 70%, 55%) !important;
+    stroke: hsl(0, 70%, 35%) !important;
     stroke-width: 2px !important;
-    /* filter: drop-shadow(0 0 6px hsl(var(--destructive) / 0.4)); */
+    filter: drop-shadow(0 0 4px hsl(0, 70%, 45% / 0.4)) !important;
   }
+
+  /* Correct path districts - subtle gold highlight */
   .district-correct-path {
-    fill: hsl(var(--primary) / 0.3); /* Light golden path */
-    stroke: hsl(var(--primary));
-    stroke-width: 1px;
-    filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.2));
+    fill: hsl(var(--primary) / 0.2) !important;
+    stroke: hsl(var(--primary) / 0.6) !important;
+    stroke-width: 1px !important;
+    transition: all 0.2s ease-in-out !important;
   }
+
+  /* Correctly guessed districts - bright gold */
   .district-guessed-correct {
-    fill: hsl(var(--primary)) !important; /* Golden orange for correct */
-    stroke: hsl(var(--foreground));
-    stroke-width: 1.5px;
-    filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.4));
+    fill: hsl(var(--primary)) !important;
+    stroke: hsl(var(--primary-foreground)) !important;
+    stroke-width: 1.5px !important;
+    filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.5)) !important;
+    animation: pulse-correct 0.5s ease-out !important;
   }
+
+  /* Incorrectly guessed districts - muted red */
   .district-guessed-incorrect {
-    fill: hsl(var(--destructive) / 0.7) !important; /* Red for incorrect */
-    stroke: hsl(var(--foreground));
-    stroke-width: 1px;
-    filter: drop-shadow(0 0 3px hsl(var(--destructive) / 0.3));
+    fill: hsl(var(--destructive) / 0.6) !important;
+    stroke: hsl(var(--destructive)) !important;
+    stroke-width: 1px !important;
+    filter: drop-shadow(0 0 2px hsl(var(--destructive) / 0.3)) !important;
+    animation: shake 0.3s ease-out !important;
+  }
+
+  /* Hint districts - subtle blue highlight */
+  .district-hint {
+    fill: hsl(220, 70%, 60% / 0.3) !important;
+    stroke: hsl(220, 70%, 50%) !important;
+    stroke-width: 1px !important;
+    stroke-dasharray: 3,2 !important;
+    animation: hint-glow 2s ease-in-out infinite alternate !important;
+  }
+
+  /* Priority override - Start and End should always be visible */
+  .district-start,
+  .district-end {
+    z-index: 100 !important;
+  }
+
+  /* Animations */
+  @keyframes pulse-correct {
+    0% { 
+      transform: scale(1);
+      filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.5));
+    }
+    50% { 
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.8));
+    }
+    100% { 
+      transform: scale(1);
+      filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.5));
+    }
+  }
+
+  @keyframes shake {
+    0%, 20%, 50%, 80%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-2px); }
+    30% { transform: translateX(2px); }
+    60% { transform: translateX(-1px); }
+  }
+
+  @keyframes hint-glow {
+    0% { 
+      stroke-opacity: 0.5;
+      fill-opacity: 0.3;
+    }
+    100% { 
+      stroke-opacity: 1;
+      fill-opacity: 0.6;
+    }
+  }
+
+  /* Accessibility improvements */
+  .district-default[tabindex]:focus {
+    outline: 2px solid hsl(var(--ring)) !important;
+    outline-offset: 2px !important;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .district-start {
+      fill: #00AA00 !important;
+      stroke: #000000 !important;
+      stroke-width: 3px !important;
+    }
+    
+    .district-end {
+      fill: #CC0000 !important;
+      stroke: #000000 !important;
+      stroke-width: 3px !important;
+    }
+    
+    .district-guessed-correct {
+      fill: #FFD700 !important;
+      stroke: #000000 !important;
+      stroke-width: 2px !important;
+    }
+    
+    .district-guessed-incorrect {
+      fill: #FF6B6B !important;
+      stroke: #000000 !important;
+      stroke-width: 2px !important;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .district-default,
+    .district-correct-path,
+    .district-guessed-correct,
+    .district-guessed-incorrect,
+    .district-hint {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    .district-start,
+    .district-end {
+      stroke-width: 3px !important;
+    }
+    
+    .district-guessed-correct {
+      stroke-width: 2px !important;
+    }
+    
+    .district-default[tabindex] {
+      /* Larger touch targets */
+      stroke-width: 2px !important;
+    }
   }
 }
