@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Puzzle } from '@/types';
-import { GuessResult } from '@/lib/gameLogic';
+import { GuessResult } from '@/lib/enhancedGameLogic';
 // import { InteractiveNepalMap } from '@/components/InteractiveNepalMap'; // Removed
 import { GuessInput } from '@/components/nepal-traversal/GuessInput';
 import { GuessHistoryCard } from '@/components/nepal-traversal/GuessHistoryCard';
