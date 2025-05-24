@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Puzzle } from '@/types';
 import { GuessResult } from '@/lib/gameLogic';
-import { InteractiveNepalMap } from '@/components/InteractiveNepalMap';
+// import { InteractiveNepalMap } from '@/components/InteractiveNepalMap'; // Removed
 import { GuessInput } from '@/components/nepal-traversal/GuessInput';
 import { GuessHistoryCard } from '@/components/nepal-traversal/GuessHistoryCard';
 
@@ -52,13 +52,6 @@ export function ClassicMode({
         ))}
       </div>
       <div className="flex flex-row gap-4">
-        <div className="flex-1">
-          <InteractiveNepalMap
-            guessedPath={userPath}
-            startDistrict={puzzle.startDistrict}
-            endDistrict={puzzle.endDistrict}
-          />
-        </div>
         <div className="max-w-xs w-full">
           <GuessHistoryCard
             userPath={userPath}
