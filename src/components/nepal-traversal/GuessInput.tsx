@@ -53,7 +53,10 @@ export const GuessInput: React.FC<GuessInputProps> = ({
     setHighlightedIndex(null);
     setError(null);
     justSelected.current = true;
-    setTimeout(() => inputRef.current?.focus(), 0);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.blur(); // Blur to close dropdown and prevent re-opening
+    }, 0);
   }, [isGameWon]);
 
   const handleFormSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
@@ -249,8 +252,10 @@ export const GuessInput: React.FC<GuessInputProps> = ({
                       <div
                         key={district}
                         onClick={() => handleDistrictSelect(district)}
-                        className={`text-sm p-2 rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors ${
-                          highlightedIndex === index ? "bg-accent text-accent-foreground" : ""
+                        className={`text-sm p-2 rounded-sm cursor-pointer transition-colors ${
+                          highlightedIndex === index
+                            ? "bg-accent !text-black font-semibold"
+                            : "hover:bg-accent hover:!text-black"
                         }`}
                       >
                         {district}

@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { getRandomPuzzle, DISTRICT_ADJACENCY } from '@/lib/puzzle';
 import { GameEngine, GuessResult } from '@/lib/enhancedGameLogic';
 import { ClassicMode } from '@/components/game/modes/ClassicMode';
-import { AchievementToast } from '@/components/AchievementToast';
 import GameHeader from '@/components/game/GameHeader';
 import type { Puzzle } from '@/types';
 import { GameStorage } from '@/hooks/useOptimizedGame';
@@ -44,45 +43,6 @@ export default function NepalTraversalPage() {
     setCurrentPuzzle(initialPuzzle);
     initializeGameEngine(initialPuzzle);
   }, [initializeGameEngine]);
-
-  // Achievement checking
-  useEffect(() => {
-    if (!isClient || !gameEngineRef.current) return;
-    checkAchievements();
-  }, [isGameWon, isClient]);
-
-  const checkAchievements = useCallback(() => {
-    if (!gameEngineRef.current) return;
-    
-    const newAchievements = [];
-    const unlockedAchievements = GameStorage.get('achievements') || [];
-    
-    if (isGameWon && !unlockedAchievements.includes('speed_demon')) {
-      newAchievements.push({
-        id: 'speed_demon',
-        emoji: '⚡',
-        label: 'Puzzle Master',
-        description: 'Completed a puzzle!',
-      });
-    }
-    
-    const wrongGuesses = gameEngineRef.current.getGuessHistory().filter(g => !g.isCorrect).length;
-    if (isGameWon && wrongGuesses === 0 && !unlockedAchievements.includes('perfect_path')) {
-      newAchievements.push({
-        id: 'perfect_path',
-        emoji: '🎯',
-        label: 'Perfect Path',
-        description: 'No wrong guesses!'
-      });
-    }
-    
-    if (newAchievements.length > 0) {
-      const updatedAchievements = [...unlockedAchievements, ...newAchievements.map(a => a.id)];
-      GameStorage.set('achievements', updatedAchievements);
-      setAchievements(updatedAchievements);
-      setShowAchievement(newAchievements[0]);
-    }
-  }, [isGameWon]);
 
   const handleNewGame = useCallback(() => {
     const newPuzzle = getRandomPuzzle(true, 6);
@@ -241,13 +201,6 @@ export default function NepalTraversalPage() {
         lastFeedback={lastFeedback}
         allCorrectIntermediates={new Set(engine.getRequiredIntermediates())}
       />
-
-      {showAchievement && (
-        <AchievementToast
-          achievement={showAchievement}
-          onClose={() => setShowAchievement(null)}
-        />
-      )}
     </div>
   );
 }
