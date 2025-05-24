@@ -161,111 +161,129 @@
     ) 1;
   }
 
-  /* SVG Map District Styles - Improved Version */
+  /* SVG Map District Styles - Fixed Version */
+  .nepal-map-container {
+    width: 100%;
+    min-height: 400px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .nepal-map-svg {
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    background: white !important;
+  }
+
+  /* Default state for all districts */
   .district-default {
-    fill: hsl(var(--muted)) !important;
-    stroke: hsl(var(--border)) !important;
+    fill: #f3f4f6 !important; /* Light gray */
+    stroke: #9ca3af !important; /* Gray border */
     stroke-width: 0.5px !important;
     transition: all 0.2s ease-in-out !important;
-    cursor: default !important;
   }
 
-  /* Hover effect only for interactive districts */
-  .district-default[tabindex]:hover {
-    fill: hsl(var(--muted-foreground) / 0.1) !important;
-    stroke: hsl(var(--border)) !important;
-    stroke-width: 1px !important;
-  }
-
-  /* Start district - prominent green */
+  /* Start district - Bright Green */
   .district-start {
-    fill: hsl(120, 70%, 50%) !important;
-    stroke: hsl(120, 70%, 30%) !important;
+    fill: #22c55e !important; /* Green-500 */
+    stroke: #166534 !important; /* Green-800 */
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 4px hsl(120, 70%, 40% / 0.4)) !important;
+    filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.4)) !important;
   }
 
-  /* End district - prominent red */
+  /* End district - Bright Red */
   .district-end {
-    fill: hsl(0, 70%, 55%) !important;
-    stroke: hsl(0, 70%, 35%) !important;
+    fill: #ef4444 !important; /* Red-500 */
+    stroke: #991b1b !important; /* Red-800 */
     stroke-width: 2px !important;
-    filter: drop-shadow(0 0 4px hsl(0, 70%, 45% / 0.4)) !important;
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.4)) !important;
   }
 
-  /* Correct path districts - subtle gold highlight */
+  /* Correct path districts - Light blue */
   .district-correct-path {
-    fill: hsl(var(--primary) / 0.2) !important;
-    stroke: hsl(var(--primary) / 0.6) !important;
+    fill: #93c5fd !important; /* Blue-300 */
+    stroke: #3b82f6 !important; /* Blue-500 */
     stroke-width: 1px !important;
-    transition: all 0.2s ease-in-out !important;
   }
 
-  /* Correctly guessed districts - bright gold */
+  /* Correctly guessed districts - Gold/Yellow */
   .district-guessed-correct {
-    fill: hsl(var(--primary)) !important;
-    stroke: hsl(var(--primary-foreground)) !important;
+    fill: #fbbf24 !important; /* Amber-400 */
+    stroke: #d97706 !important; /* Amber-600 */
     stroke-width: 1.5px !important;
-    filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.5)) !important;
-    animation: pulse-correct 0.5s ease-out !important;
+    filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.5)) !important;
+    animation: pulse-success 0.5s ease-out !important;
   }
 
-  /* Incorrectly guessed districts - muted red */
+  /* Incorrectly guessed districts - Light red */
   .district-guessed-incorrect {
-    fill: hsl(var(--destructive) / 0.6) !important;
-    stroke: hsl(var(--destructive)) !important;
+    fill: #f87171 !important; /* Red-400 */
+    stroke: #dc2626 !important; /* Red-600 */
     stroke-width: 1px !important;
-    filter: drop-shadow(0 0 2px hsl(var(--destructive) / 0.3)) !important;
-    animation: shake 0.3s ease-out !important;
+    filter: drop-shadow(0 0 2px rgba(248, 113, 113, 0.3)) !important;
+    animation: shake-error 0.3s ease-out !important;
   }
 
-  /* Hint districts - subtle blue highlight */
+  /* Hint districts */
   .district-hint {
-    fill: hsl(220, 70%, 60% / 0.3) !important;
-    stroke: hsl(220, 70%, 50%) !important;
+    fill: rgba(59, 130, 246, 0.3) !important; /* Blue with opacity */
+    stroke: #3b82f6 !important;
     stroke-width: 1px !important;
     stroke-dasharray: 3,2 !important;
-    animation: hint-glow 2s ease-in-out infinite alternate !important;
   }
 
-  /* Priority override - Start and End should always be visible */
+  /* Ensure start/end districts are always visible */
   .district-start,
   .district-end {
+    opacity: 1 !important;
     z-index: 100 !important;
   }
 
   /* Animations */
-  @keyframes pulse-correct {
+  @keyframes pulse-success {
     0% { 
       transform: scale(1);
-      filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.5));
+      filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.5));
     }
     50% { 
       transform: scale(1.05);
-      filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.8));
+      filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.8));
     }
     100% { 
       transform: scale(1);
-      filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.5));
+      filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.5));
     }
   }
 
-  @keyframes shake {
+  @keyframes shake-error {
     0%, 20%, 50%, 80%, 100% { transform: translateX(0); }
     10% { transform: translateX(-2px); }
     30% { transform: translateX(2px); }
     60% { transform: translateX(-1px); }
   }
 
-  @keyframes hint-glow {
-    0% { 
-      stroke-opacity: 0.5;
-      fill-opacity: 0.3;
-    }
-    100% { 
-      stroke-opacity: 1;
-      fill-opacity: 0.6;
-    }
+  /* Make sure SVG elements are visible */
+  svg path,
+  svg g {
+    pointer-events: auto !important;
+  }
+
+  /* Dark mode adjustments */
+  .dark .district-default {
+    fill: #374151 !important; /* Gray-700 */
+    stroke: #6b7280 !important; /* Gray-500 */
+  }
+
+  .dark .nepal-map-container {
+    background: #1f2937 !important; /* Gray-800 */
+    border-color: #4b5563 !important; /* Gray-600 */
+  }
+
+  .dark .nepal-map-svg {
+    background: #1f2937 !important; /* Gray-800 */
   }
 
   /* Accessibility improvements */
