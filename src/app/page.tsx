@@ -6,21 +6,41 @@ import { GameModeSelector } from '@/components/game/GameModeSelector';
 import { ClassicMode } from '@/components/game/modes/ClassicMode';
 import { AchievementToast } from '@/components/AchievementToast';
 import GameHeader from '@/components/game/GameHeader';
+import type { Puzzle } from '@/types';
 
 const GAME_MODES = [
   { id: 'classic', name: 'Classic', description: 'Find all districts in any order' }
 ];
 
+// Default puzzle to prevent hydration issues
+const DEFAULT_PUZZLE: Puzzle = {
+  id: 'default',
+  startDistrict: 'kathmandu',
+  endDistrict: 'chitwan',
+  shortestPath: ['kathmandu', 'dhading', 'chitwan']
+};
+
 export default function NepalTraversalPage() {
-  const [initialPuzzle] = useState(() => getRandomPuzzle(true, 6));
-  const { state, actions } = useOptimizedGame(initialPuzzle);
+  const [isClient, setIsClient] = useState(false);
+  const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle>(DEFAULT_PUZZLE);
+  const { state, actions } = useOptimizedGame(currentPuzzle);
   const [showAchievement, setShowAchievement] = useState<any>(null);
   const [achievements, setAchievements] = useState<string[]>([]);
 
+  // Initialize client-side only
+  useEffect(() => {
+    setIsClient(true);
+    // Generate initial puzzle after hydration
+    const initialPuzzle = getRandomPuzzle(true, 6);
+    setCurrentPuzzle(initialPuzzle);
+    actions.startNewGame(initialPuzzle);
+  }, []);
+
   // Achievement checking
   useEffect(() => {
+    if (!isClient) return;
     checkAchievements();
-  }, [state.guessHistory, state.isGameWon]);
+  }, [state.guessHistory, state.isGameWon, isClient]);
 
   const checkAchievements = () => {
     const newAchievements = [];
@@ -52,6 +72,7 @@ export default function NepalTraversalPage() {
 
   const handleNewGame = () => {
     const newPuzzle = getRandomPuzzle(true, 6);
+    setCurrentPuzzle(newPuzzle);
     actions.startNewGame(newPuzzle);
   };
 
@@ -87,6 +108,24 @@ export default function NepalTraversalPage() {
     };
     return <ClassicMode {...commonProps} />;
   };
+
+  // Prevent hydration mismatch by not rendering until client-side
+  if (!isClient) {
+    return (
+      <div className="max-w-6xl mx-auto p-4 space-y-6">
+        <div className="flex items-center justify-between mb-2">
+          <GameHeader
+            startDistrict={DEFAULT_PUZZLE.startDistrict}
+            endDistrict={DEFAULT_PUZZLE.endDistrict}
+            mode="classic"
+          />
+          <div className="px-8 py-3 bg-muted rounded-lg font-semibold animate-pulse">
+            Loading...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-4 space-y-6">
