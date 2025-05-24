@@ -176,7 +176,7 @@ export function DebugNepalMap({
         />
       </div>
       {/* Debug Panel */}
-      <div className="mt-4 p-4 bg-gray-100 rounded-lg text-xs">
+      <div className="mt-4 p-4 bg-gray-800 rounded-lg text-xs">
         <h3 className="font-bold mb-2">🐛 Debug Info</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
