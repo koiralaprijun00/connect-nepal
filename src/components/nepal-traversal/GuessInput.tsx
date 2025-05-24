@@ -55,9 +55,22 @@ export const GuessInput: React.FC<GuessInputProps> = ({
     justSelected.current = true;
     setTimeout(() => {
       inputRef.current?.focus();
-      inputRef.current?.blur(); // Blur to close dropdown and prevent re-opening
+      setTimeout(() => {
+        setPopoverOpen(false);
+      }, 10);
     }, 0);
   }, [isGameWon]);
+
+  // Add onBlur handler for input
+  const handleInputBlur = useCallback(() => {
+    setTimeout(() => {
+      if (!justSelected.current) {
+        setPopoverOpen(false);
+        setHighlightedIndex(null);
+      }
+      justSelected.current = false;
+    }, 100);
+  }, []);
 
   const handleFormSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -223,6 +236,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({
                 if (isGameWon || isLoading) return;
                 if (guessDistrict.trim() && filteredDistricts.length > 0) setPopoverOpen(true);
               }}
+              onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
               placeholder={
                 isGameWon 
@@ -245,17 +259,17 @@ export const GuessInput: React.FC<GuessInputProps> = ({
             
             {/* Autocomplete dropdown */}
             {popoverOpen && filteredDistricts.length > 0 && !isGameWon && !isLoading && (
-              <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border max-h-48">
+              <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-48">
                 <ScrollArea className="rounded-md max-h-48">
                   <div className="p-1">
                     {filteredDistricts.map((district: string, index: number) => (
                       <div
                         key={district}
                         onClick={() => handleDistrictSelect(district)}
-                        className={`text-sm p-2 rounded-sm cursor-pointer transition-colors ${
+                        className={`text-sm p-2 rounded-sm cursor-pointer transition-colors text-foreground ${
                           highlightedIndex === index
-                            ? "bg-accent !text-black font-semibold"
-                            : "hover:bg-accent hover:!text-black"
+                            ? "bg-accent text-accent-foreground font-semibold"
+                            : "hover:bg-accent hover:text-accent-foreground"
                         }`}
                       >
                         {district}
