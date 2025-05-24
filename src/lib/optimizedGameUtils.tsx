@@ -359,38 +359,6 @@ export function useOptimizedGame(adjacencyMap: Record<string, string[]>) {
   };
 }
 
-// Memory-efficient SVG map component
-export const OptimizedMapRenderer = React.memo(({
-  districts,
-  highlightedDistricts,
-  onDistrictClick
-}: {
-  districts: Array<{ name: string; path: string; }>;
-  highlightedDistricts: Set<string>;
-  onDistrictClick: (district: string) => void;
-}) => {
-  // Only re-render when highlighted districts actually change
-  const memoizedDistricts = useMemo(() =>
-    districts.map(district => ({
-      ...district,
-      isHighlighted: highlightedDistricts.has(district.name.toLowerCase())
-    })), [districts, highlightedDistricts]
-  );
-
-  return (
-    <svg viewBox="0 0 800 600" className="w-full h-auto">
-      {memoizedDistricts.map(district => (
-        <path
-          key={district.name}
-          d={district.path}
-          className={district.isHighlighted ? 'district-highlighted' : 'district-default'}
-          onClick={() => onDistrictClick(district.name)}
-        />
-      ))}
-    </svg>
-  );
-});
-
 // Lazy loading for large datasets
 export function useLazyPuzzleGeneration() {
   const [puzzleCache, setPuzzleCache] = useState<Map<string, Puzzle>>(new Map());

@@ -160,6 +160,7 @@
       hsl(var(--accent))
     ) 1;
   }
+<<<<<<< Updated upstream
 
   /* All map-related CSS removed */
 }
@@ -226,4 +227,6 @@
       stroke-width: 2px !important;
     }
   }
+=======
+>>>>>>> Stashed changes
 }
