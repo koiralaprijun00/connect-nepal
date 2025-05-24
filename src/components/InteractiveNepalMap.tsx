@@ -1,14 +1,7 @@
 import React from 'react';
 import { ImprovedNepalDistrictMap } from './nepal-traversal/ImprovedNepalDistrictMap';
 
-export function InteractiveNepalMap({
-  guessedPath,
-  correctPath,
-  startDistrict,
-  endDistrict,
-  className,
-  onDistrictClick
-}: {
+export function InteractiveNepalMap(props: {
   guessedPath: string[];
   correctPath: string[];
   startDistrict: string;
@@ -17,14 +10,11 @@ export function InteractiveNepalMap({
   onDistrictClick?: (districtName: string) => void;
 }) {
   return (
-    <div className={`w-full aspect-[4/3] h-auto flex items-center justify-center ${className}`}>
+    <div style={{ width: '100%', maxWidth: 800, height:550, background: '#222', margin: '0 auto' }}>
       <ImprovedNepalDistrictMap
-        guessedPath={guessedPath}
-        correctPath={correctPath}
-        startDistrict={startDistrict}
-        endDistrict={endDistrict}
-        onDistrictClick={onDistrictClick}
+        {...props}
         className="w-full h-full"
+        style={{ display: 'block' }}
       />
     </div>
   );

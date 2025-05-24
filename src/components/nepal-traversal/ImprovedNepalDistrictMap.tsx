@@ -229,11 +229,11 @@ export function ImprovedNepalDistrictMap({
   }, [onDistrictClick]);
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full h-full">
       <NepalMapSVG
         ref={svgRef}
         className={cn(
-          'w-full h-auto max-w-full',
+          'w-full h-full',
           'bg-background rounded-lg border border-border shadow-sm',
           'transition-all duration-200',
           className
