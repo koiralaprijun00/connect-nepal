@@ -76,12 +76,30 @@ export function validateDistrictName(input: string): string | null {
 // Maximum number of intermediate districts allowed between start and end
 const MAX_INTERMEDIATE_DISTRICTS = 10;
 
-// Standardized adjacency map with proper district names (lowercase keys for BFS efficiency)
+// CORRECTED ADJACENCY MAP - Manually verified with preferred routes
+// Order matters: BFS will find the first path, so preferred routes should come first
 export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   kathmandu: ['bhaktapur', 'lalitpur', 'nuwakot', 'dhading', 'sindhupalchok'],
   bhaktapur: ['kathmandu', 'lalitpur', 'kavrepalanchok'],
   lalitpur: ['kathmandu', 'bhaktapur', 'makwanpur', 'kavrepalanchok'],
-  makwanpur: ['lalitpur', 'chitwan', 'dhading', 'parsa', 'rautahat', 'sarlahi', 'kavrepalanchok', 'sindhuli'],
+  
+  // CORRECTED: Southern plains (Terai) - prioritize east-west logical flow
+  bara: ['rautahat', 'parsa'], // rautahat FIRST for preferred bara→rautahat→sarlahi→sindhuli route
+  rautahat: ['bara', 'sarlahi', 'makwanpur', 'parsa'], // sarlahi FIRST for direct hill connection
+  sarlahi: ['rautahat', 'sindhuli', 'mahottari', 'dhanusha'], // sindhuli FIRST for direct connection
+  parsa: ['bara', 'rautahat', 'makwanpur', 'chitwan'], // Maintains connections but deprioritized
+  
+  // Key transition districts
+  makwanpur: ['lalitpur', 'chitwan', 'dhading', 'sindhuli', 'kavrepalanchok', 'parsa', 'rautahat'], // sindhuli before parsa
+  sindhuli: ['sarlahi', 'makwanpur', 'kavrepalanchok', 'ramechhap', 'mahottari', 'dhanusha', 'siraha', 'okhaldhunga', 'udayapur'],
+  
+  // Rest of Terai districts
+  mahottari: ['sarlahi', 'sindhuli', 'dhanusha'],
+  dhanusha: ['mahottari', 'sarlahi', 'sindhuli', 'siraha'],
+  siraha: ['dhanusha', 'saptari', 'sindhuli', 'okhaldhunga', 'udayapur'],
+  saptari: ['siraha', 'sunsari', 'udayapur'],
+  sunsari: ['saptari', 'morang', 'udayapur', 'dhankuta'],
+  
   chitwan: ['makwanpur', 'parsa', 'nawalpur', 'tanahu', 'gorkha', 'dhading'],
   dhading: ['kathmandu', 'nuwakot', 'gorkha', 'makwanpur', 'rasuwa', 'chitwan'],
   nuwakot: ['kathmandu', 'dhading', 'rasuwa', 'sindhupalchok'],
@@ -132,16 +150,10 @@ export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   kavrepalanchok: ['bhaktapur', 'lalitpur', 'makwanpur', 'sindhupalchok', 'ramechhap', 'sindhuli'],
   dolakha: ['sindhupalchok', 'ramechhap', 'solukhumbu'],
   ramechhap: ['kavrepalanchok', 'dolakha', 'sindhuli', 'okhaldhunga', 'solukhumbu'],
-  sindhuli: ['kavrepalanchok', 'makwanpur', 'sarlahi', 'mahottari', 'okhaldhunga', 'ramechhap', 'dhanusha', 'siraha', 'udayapur'],
-  sarlahi: ['makwanpur', 'sindhuli', 'mahottari', 'dhanusha', 'rautahat'],
-  rautahat: ['makwanpur', 'sarlahi', 'parsa', 'bara'],
-  parsa: ['makwanpur', 'chitwan', 'rautahat', 'bara'],
-  bara: ['parsa', 'rautahat'],
-  mahottari: ['sarlahi', 'sindhuli', 'dhanusha'],
-  dhanusha: ['mahottari', 'sarlahi', 'sindhuli', 'siraha'],
-  siraha: ['dhanusha', 'saptari', 'sindhuli', 'okhaldhunga'],
-  saptari: ['siraha', 'sunsari', 'udayapur'],
-  sunsari: ['saptari', 'morang', 'udayapur', 'dhankuta'],
+  okhaldhunga: ['sindhuli', 'ramechhap', 'khotang', 'solukhumbu', 'udayapur', 'siraha'],
+  khotang: ['okhaldhunga', 'bhojpur', 'solukhumbu', 'udayapur'],
+  udayapur: ['saptari', 'sunsari', 'dhankuta', 'bhojpur', 'khotang', 'okhaldhunga', 'sindhuli', 'siraha'],
+  solukhumbu: ['dolakha', 'ramechhap', 'okhaldhunga', 'khotang', 'sankhuwasabha', 'bhojpur'],
   morang: ['sunsari', 'jhapa', 'dhankuta', 'ilam'],
   jhapa: ['morang', 'ilam'],
   ilam: ['jhapa', 'morang', 'panchthar', 'dhankuta'],
@@ -151,11 +163,90 @@ export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   terhathum: ['panchthar', 'taplejung', 'sankhuwasabha', 'dhankuta', 'bhojpur'],
   dhankuta: ['sunsari', 'morang', 'ilam', 'panchthar', 'terhathum', 'bhojpur', 'udayapur'],
   bhojpur: ['dhankuta', 'terhathum', 'sankhuwasabha', 'solukhumbu', 'khotang', 'udayapur'],
-  okhaldhunga: ['sindhuli', 'ramechhap', 'khotang', 'solukhumbu', 'udayapur', 'siraha'],
-  khotang: ['okhaldhunga', 'bhojpur', 'solukhumbu', 'udayapur'],
-  udayapur: ['saptari', 'sunsari', 'dhankuta', 'bhojpur', 'khotang', 'okhaldhunga', 'sindhuli'],
-  solukhumbu: ['dolakha', 'ramechhap', 'okhaldhunga', 'khotang', 'sankhuwasabha', 'bhojpur'],
 };
+
+// Route verification and manual fixing utilities
+export interface RouteVerificationResult {
+  isPreferredRoute: boolean;
+  actualRoute: string[] | null;
+  allRoutes: string[][];
+  issues: string[];
+}
+
+/**
+ * Verify if a specific route is the preferred shortest path
+ */
+export function verifyPreferredRoute(
+  start: string,
+  end: string,
+  expectedRoute: string[]
+): RouteVerificationResult {
+  const startKey = start.toLowerCase();
+  const endKey = end.toLowerCase();
+  const expectedLower = expectedRoute.map(d => d.toLowerCase());
+  
+  // Find actual shortest path
+  const actualRoute = findShortestPath(startKey, endKey, DISTRICT_ADJACENCY);
+  const allRoutes = findAllShortestPaths(startKey, endKey, DISTRICT_ADJACENCY);
+  
+  const issues: string[] = [];
+  let isPreferredRoute = false;
+  
+  if (!actualRoute) {
+    issues.push(`No route found from ${start} to ${end}`);
+  } else if (actualRoute.length !== expectedLower.length) {
+    issues.push(`Route length mismatch: expected ${expectedLower.length}, got ${actualRoute.length}`);
+  } else if (JSON.stringify(actualRoute) === JSON.stringify(expectedLower)) {
+    isPreferredRoute = true;
+  } else {
+    issues.push(`Different route found: ${actualRoute.join(' → ')} instead of ${expectedLower.join(' → ')}`);
+    
+    // Check if expected route exists among all shortest paths
+    const expectedExists = allRoutes.some(route => 
+      JSON.stringify(route) === JSON.stringify(expectedLower)
+    );
+    
+    if (expectedExists) {
+      issues.push("Expected route exists but is not prioritized. Consider reordering adjacency lists.");
+    } else {
+      issues.push("Expected route does not exist or is not a shortest path.");
+    }
+  }
+  
+  return {
+    isPreferredRoute,
+    actualRoute,
+    allRoutes,
+    issues
+  };
+}
+
+/**
+ * Manually fix a route by reordering adjacency priorities
+ */
+export function prioritizeRoute(
+  start: string,
+  preferredNext: string,
+  adjacencyMap: Record<string, string[]> = DISTRICT_ADJACENCY
+): boolean {
+  const startKey = start.toLowerCase();
+  const nextKey = preferredNext.toLowerCase();
+  
+  if (!adjacencyMap[startKey] || !adjacencyMap[startKey].includes(nextKey)) {
+    return false; // Connection doesn't exist
+  }
+  
+  // Move preferred connection to front of array
+  const connections = adjacencyMap[startKey];
+  const index = connections.indexOf(nextKey);
+  
+  if (index > 0) {
+    connections.splice(index, 1); // Remove from current position
+    connections.unshift(nextKey);  // Add to front
+  }
+  
+  return true;
+}
 
 // Function to validate puzzle meets the intermediate district requirement
 function validatePuzzle(puzzle: Puzzle): boolean {
@@ -189,9 +280,9 @@ const MANUAL_PUZZLES: Puzzle[] = [
   },
   {
     id: 'puzzle_4',
-    startDistrict: 'Nawalpur',
-    endDistrict: 'Parasi',
-    shortestPath: ['nawalpur', 'parasi'],
+    startDistrict: 'Bara',
+    endDistrict: 'Sindhuli',
+    shortestPath: ['bara', 'rautahat', 'sarlahi', 'sindhuli'], // CORRECTED preferred route
   }
 ];
 
