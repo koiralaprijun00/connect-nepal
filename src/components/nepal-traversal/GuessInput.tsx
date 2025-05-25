@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { DISTRICTS_NEPAL } from "@/lib/puzzle";
+import { DISTRICTS_NEPAL, validateDistrictName } from "@/lib/puzzle";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -36,15 +36,6 @@ export const GuessInput: React.FC<GuessInputProps> = ({
   const [error, setError] = useState<string | null>(null);
   const justSelected = useRef(false);
 
-  // Create case-insensitive district lookup
-  const districtLookup = useMemo(() => {
-    const lookup = new Map<string, string>();
-    DISTRICTS_NEPAL.forEach(district => {
-      lookup.set(district.toLowerCase(), district);
-    });
-    return lookup;
-  }, []);
-
   // Filter districts for autocomplete suggestions, excluding start/end
   const filteredDistricts: string[] = useMemo(() => {
     const exclude = [startDistrict, endDistrict].map(d => d.toLowerCase());
@@ -74,26 +65,32 @@ export const GuessInput: React.FC<GuessInputProps> = ({
     }, 0);
   }, [isGameWon]);
 
-  // Validate and normalize district name
+  // Enhanced validation using the new validateDistrictName function
   const validateDistrict = useCallback((input: string): { isValid: boolean; normalizedName: string; error: string } => {
     const trimmed = input.trim();
     if (!trimmed) {
       return { isValid: false, normalizedName: '', error: 'Please enter a district' };
     }
 
+    // Check if trying to guess start or end district
     const excludedDistricts = [startDistrict, endDistrict].map(d => d.toLowerCase());
     if (excludedDistricts.includes(trimmed.toLowerCase())) {
       return { isValid: false, normalizedName: '', error: 'You cannot guess the start or end district.' };
     }
 
-    // Find the correct case-sensitive name
-    const correctName = districtLookup.get(trimmed.toLowerCase());
-    if (!correctName) {
-      return { isValid: false, normalizedName: '', error: 'Invalid district name' };
+    // Use the comprehensive validation function
+    const validatedName = validateDistrictName(trimmed);
+    if (!validatedName) {
+      return { isValid: false, normalizedName: '', error: 'Invalid district name. Try typing more letters or check spelling.' };
     }
 
-    return { isValid: true, normalizedName: correctName, error: '' };
-  }, [startDistrict, endDistrict, districtLookup]);
+    // Double-check it's not start/end after validation
+    if (excludedDistricts.includes(validatedName.toLowerCase())) {
+      return { isValid: false, normalizedName: '', error: 'You cannot guess the start or end district.' };
+    }
+
+    return { isValid: true, normalizedName: validatedName, error: '' };
+  }, [startDistrict, endDistrict]);
 
   // Add onBlur handler for input
   const handleInputBlur = useCallback(() => {
@@ -228,7 +225,7 @@ export const GuessInput: React.FC<GuessInputProps> = ({
                   ? "Puzzle completed!" 
                   : isLoading 
                     ? "Processing..." 
-                    : "Type a district name..."
+                    : "Type a district name... (e.g., Nawalpur, Parasi)"
               }
               disabled={isLoading || isGameWon}
               className="text-base pr-12"
@@ -273,6 +270,13 @@ export const GuessInput: React.FC<GuessInputProps> = ({
             </div>
           )}
           
+          {/* Helpful hints */}
+          {!error && guessDistrict.trim().length > 0 && guessDistrict.trim().length < 3 && (
+            <div className="text-blue-600 text-sm">
+              💡 Try typing at least 3 letters for better suggestions
+            </div>
+          )}
+          
           {/* Action buttons */}
           <div className="flex gap-2">
             <Button 
@@ -297,6 +301,11 @@ export const GuessInput: React.FC<GuessInputProps> = ({
             )}
           </div>
         </form>
+        
+        {/* District count info */}
+        <div className="mt-2 text-xs text-muted-foreground">
+          Search among {DISTRICTS_NEPAL.length} districts of Nepal
+        </div>
       </div>
     </div>
   );

@@ -1,82 +1,82 @@
 import type { Puzzle } from '@/types';
 
-// A more comprehensive list of districts in Nepal, sorted alphabetically.
+// Complete list of all 77 districts of Nepal with standardized names
 export const DISTRICTS_NEPAL = [
-  "Achham", "Arghakhanchi", "Baglung", "Baitadi", "Bajhang", "Bajura", "Banke", "Bara",
-  "Bardiya", "Bhaktapur", "Bhojpur", "Chitwan", "Dadeldhura", "Dailekh", "Dang",
-  "Darchula", "Dhading", "Dhankuta", "Dhanusha", "Dolakha", "Dolpa", "Doti", "Gorkha",
-  "Gulmi", "Humla", "Ilam", "Jajarkot", "Jhapa", "Jumla", "Kailali", "Kalikot",
-  "Kanchanpur", "Kapilvastu", "Kaski", "Kathmandu", "Kavrepalanchok", "Khotang",
-  "Lalitpur", "Lamjung", "Mahottari", "Makwanpur", "Manang", "Morang", "Mugu",
-  "Mustang", "Myagdi", "Nawalparasi", // Note: Nawalparasi was split; using old name for simplicity.
-  "Nuwakot", "Okhaldhunga", "Palpa", "Panchthar", "Parbat", "Parsa", "Pyuthan",
-  "Ramechhap", "Rasuwa", "Rautahat", "Rolpa", "Rukum", // Note: Rukum was split; using old name for simplicity.
-  "Rupandehi", "Salyan", "Sankhuwasabha", "Saptari", "Sarlahi", "Sindhuli",
-  "Sindhupalchok", "Siraha", "Solukhumbu", "Sunsari", "Surkhet", "Syangja",
-  "Tanahu", "Taplejung", "Terhathum", "Udayapur"
+  // Province 1 (Koshi)
+  "Bhojpur", "Dhankuta", "Ilam", "Jhapa", "Khotang", "Morang", "Okhaldhunga", 
+  "Panchthar", "Sankhuwasabha", "Solukhumbu", "Sunsari", "Taplejung", 
+  "Terhathum", "Udayapur",
+  
+  // Province 2 (Madhesh)
+  "Bara", "Dhanusha", "Mahottari", "Parsa", "Rautahat", "Saptari", "Sarlahi", "Siraha",
+  
+  // Bagmati Province
+  "Bhaktapur", "Chitwan", "Dhading", "Dolakha", "Kathmandu", "Kavrepalanchok", 
+  "Lalitpur", "Makwanpur", "Nuwakot", "Ramechhap", "Rasuwa", "Sindhuli", 
+  "Sindhupalchok",
+  
+  // Gandaki Province
+  "Baglung", "Gorkha", "Kaski", "Lamjung", "Manang", "Mustang", "Myagdi", 
+  "Nawalpur", "Parbat", "Syangja", "Tanahu",
+  
+  // Lumbini Province
+  "Arghakhanchi", "Banke", "Bardiya", "Dang", "Gulmi", "Kapilvastu", "Palpa", 
+  "Parasi", "Pyuthan", "Rolpa", "Rukum East", "Rupandehi",
+  
+  // Karnali Province
+  "Dailekh", "Dolpa", "Humla", "Jajarkot", "Jumla", "Kalikot", "Mugu", 
+  "Rukum West", "Salyan", "Surkhet",
+  
+  // Sudurpashchim Province
+  "Achham", "Baitadi", "Bajhang", "Bajura", "Dadeldhura", "Darchula", 
+  "Doti", "Kailali", "Kanchanpur"
 ].sort();
+
+// District name variations and common misspellings mapping
+export const DISTRICT_NAME_VARIATIONS: Record<string, string> = {
+  // Handle old names and common variations
+  'nawalparasi': 'Nawalpur', // Old unified district
+  'nawalparasi east': 'Parasi',
+  'nawalparasi west': 'Nawalpur', 
+  'rukum': 'Rukum East', // Default to East for legacy
+  'argakhanchi': 'Arghakhanchi', // Common misspelling
+  
+  // Ensure proper capitalization mapping
+  'kathmandu': 'Kathmandu',
+  'lalitpur': 'Lalitpur',
+  'bhaktapur': 'Bhaktapur',
+  'chitwan': 'Chitwan',
+  'pokhara': 'Kaski', // City name to district
+  'biratnagar': 'Morang', // City name to district
+};
+
+// Create comprehensive district lookup for validation
+export function validateDistrictName(input: string): string | null {
+  const normalized = input.trim();
+  
+  // Check exact match (case insensitive)
+  const exactMatch = DISTRICTS_NEPAL.find(d => 
+    d.toLowerCase() === normalized.toLowerCase()
+  );
+  if (exactMatch) return exactMatch;
+  
+  // Check variations mapping
+  const variation = DISTRICT_NAME_VARIATIONS[normalized.toLowerCase()];
+  if (variation) return variation;
+  
+  // Check partial match (for autocomplete)
+  const partialMatch = DISTRICTS_NEPAL.find(d => 
+    d.toLowerCase().includes(normalized.toLowerCase())
+  );
+  if (partialMatch && normalized.length >= 3) return partialMatch;
+  
+  return null;
+}
 
 // Maximum number of intermediate districts allowed between start and end
 const MAX_INTERMEDIATE_DISTRICTS = 10;
 
-// Function to validate puzzle meets the intermediate district requirement
-function validatePuzzle(puzzle: Puzzle): boolean {
-  const intermediateCount = puzzle.shortestPath.length - 2; // Exclude start and end
-  if (intermediateCount > MAX_INTERMEDIATE_DISTRICTS) {
-    console.warn(`Puzzle ${puzzle.id} exceeds maximum intermediate districts (${intermediateCount} > ${MAX_INTERMEDIATE_DISTRICTS})`);
-    return false;
-  }
-  return true;
-}
-
-// Simple manual puzzles for reliable fallback
-const MANUAL_PUZZLES: Puzzle[] = [
-  {
-    id: 'puzzle_1',
-    startDistrict: 'rupandehi',
-    endDistrict: 'gulmi',
-    shortestPath: ['rupandehi', 'palpa', 'gulmi'],
-  },
-  {
-    id: 'puzzle_2',
-    startDistrict: 'dhading',
-    endDistrict: 'chitwan',
-    shortestPath: ['dhading', 'makwanpur', 'parsa', 'chitwan'],
-  },
-  {
-    id: 'puzzle_3',
-    startDistrict: 'kathmandu',
-    endDistrict: 'lalitpur',
-    shortestPath: ['kathmandu', 'lalitpur'],
-  }
-];
-
-// Use manual puzzles as base, can be enhanced with auto-generation at runtime
-const PUZZLES: Puzzle[] = MANUAL_PUZZLES;
-
-// Validate all puzzles on module load
-const validPuzzles = PUZZLES.filter(validatePuzzle);
-if (validPuzzles.length !== PUZZLES.length) {
-  console.warn(`${PUZZLES.length - validPuzzles.length} puzzles were removed due to exceeding the maximum intermediate districts limit.`);
-}
-
-export function getRandomPuzzle(useAutoGenerated: boolean = false, maxIntermediate: number = 10): Puzzle {
-  if (useAutoGenerated) {
-    // Generate a random puzzle with random difficulty
-    const difficulties: PuzzleDifficulty[] = ['easy', 'medium', 'hard'];
-    const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
-    const generatedPuzzle = generatePuzzleWithDifficulty({ difficulty: randomDifficulty, maxIntermediate });
-    if (generatedPuzzle) {
-      return generatedPuzzle;
-    }
-    // Fallback to manual puzzles if generation fails
-  }
-  
-  // Use manual puzzles
-  const randomIndex = Math.floor(Math.random() * validPuzzles.length);
-  return validPuzzles[randomIndex];
-}
-
+// Standardized adjacency map with proper district names (lowercase keys for BFS efficiency)
 export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   kathmandu: ['bhaktapur', 'lalitpur', 'nuwakot', 'dhading', 'sindhupalchok'],
   bhaktapur: ['kathmandu', 'lalitpur', 'kavrepalanchok'],
@@ -91,19 +91,19 @@ export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   tanahu: ['lamjung', 'kaski', 'syangja', 'chitwan', 'gorkha', 'nawalpur'],
   kaski: ['lamjung', 'tanahu', 'syangja', 'parbat', 'myagdi', 'manang'],
   syangja: ['kaski', 'tanahu', 'palpa', 'gulmi', 'parbat'],
-  palpa: ['syangja', 'gulmi', 'nawalpur', 'parasi', 'rupandehi', 'argakhanchi', 'kapilvastu'],
-  gulmi: ['palpa', 'syangja', 'argakhanchi', 'pyuthan', 'baglung'],
+  palpa: ['syangja', 'gulmi', 'nawalpur', 'parasi', 'rupandehi', 'arghakhanchi', 'kapilvastu'],
+  gulmi: ['palpa', 'syangja', 'arghakhanchi', 'pyuthan', 'baglung'],
   nawalpur: ['palpa', 'chitwan', 'tanahu', 'parasi'],
-  parasi: ['palpa', 'rupandehi', 'nawalpur'], // Removed 'chitwan'
+  parasi: ['palpa', 'rupandehi', 'nawalpur'],
   rupandehi: ['parasi', 'kapilvastu', 'palpa'],
-  kapilvastu: ['rupandehi', 'palpa', 'argakhanchi', 'dang'], // Removed 'parasi'
-  argakhanchi: ['gulmi', 'palpa', 'kapilvastu', 'pyuthan', 'dang'],
-  pyuthan: ['dang', 'rolpa', 'gulmi', 'argakhanchi', 'salyan'],
-  rolpa: ['pyuthan', 'rukum_east', 'salyan', 'dang', 'rukum_west'],
-  rukum_east: ['rolpa', 'baglung', 'myagdi', 'rukum_west'],
-  rukum_west: ['rolpa', 'salyan', 'jajarkot', 'dolpa', 'rukum_east', 'jumla'],
-  salyan: ['pyuthan', 'rolpa', 'rukum_west', 'jajarkot', 'surkhet', 'dang'],
-  dang: ['banke', 'pyuthan', 'salyan', 'kapilvastu', 'argakhanchi', 'bardiya', 'rolpa'],
+  kapilvastu: ['rupandehi', 'palpa', 'arghakhanchi', 'dang'],
+  arghakhanchi: ['gulmi', 'palpa', 'kapilvastu', 'pyuthan', 'dang'],
+  pyuthan: ['dang', 'rolpa', 'gulmi', 'arghakhanchi', 'salyan'],
+  rolpa: ['pyuthan', 'rukum east', 'salyan', 'dang', 'rukum west'],
+  'rukum east': ['rolpa', 'baglung', 'myagdi', 'rukum west'],
+  'rukum west': ['rolpa', 'salyan', 'jajarkot', 'dolpa', 'rukum east', 'jumla'],
+  salyan: ['pyuthan', 'rolpa', 'rukum west', 'jajarkot', 'surkhet', 'dang'],
+  dang: ['banke', 'pyuthan', 'salyan', 'kapilvastu', 'arghakhanchi', 'bardiya', 'rolpa'],
   banke: ['bardiya', 'dang', 'surkhet'],
   bardiya: ['banke', 'kailali', 'surkhet', 'dang'],
   kailali: ['bardiya', 'kanchanpur', 'doti', 'achham', 'surkhet'],
@@ -117,15 +117,15 @@ export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   baitadi: ['dadeldhura', 'darchula'],
   surkhet: ['banke', 'bardiya', 'kailali', 'achham', 'dailekh', 'jajarkot', 'salyan'],
   dailekh: ['surkhet', 'achham', 'kalikot', 'jajarkot'],
-  jajarkot: ['salyan', 'rukum_west', 'dolpa', 'surkhet', 'dailekh', 'kalikot'],
+  jajarkot: ['salyan', 'rukum west', 'dolpa', 'surkhet', 'dailekh', 'kalikot'],
   kalikot: ['achham', 'dailekh', 'jajarkot', 'mugu', 'jumla', 'bajura'],
   mugu: ['bajura', 'humla', 'jumla', 'kalikot', 'dolpa'],
   humla: ['bajura', 'mugu', 'dolpa', 'bajhang'],
-  jumla: ['mugu', 'kalikot', 'dolpa', 'rukum_west'],
-  dolpa: ['rukum_west', 'jumla', 'mugu', 'humla', 'mustang', 'myagdi', 'baglung', 'jajarkot', 'manang'],
+  jumla: ['mugu', 'kalikot', 'dolpa', 'rukum west'],
+  dolpa: ['rukum west', 'jumla', 'mugu', 'humla', 'mustang', 'myagdi', 'baglung', 'jajarkot', 'manang'],
   mustang: ['dolpa', 'myagdi', 'manang'],
-  myagdi: ['mustang', 'dolpa', 'baglung', 'parbat', 'kaski', 'rukum_east'],
-  baglung: ['myagdi', 'parbat', 'gulmi', 'rukum_east', 'dolpa'],
+  myagdi: ['mustang', 'dolpa', 'baglung', 'parbat', 'kaski', 'rukum east'],
+  baglung: ['myagdi', 'parbat', 'gulmi', 'rukum east', 'dolpa'],
   parbat: ['baglung', 'kaski', 'myagdi', 'syangja'],
   manang: ['gorkha', 'lamjung', 'kaski', 'mustang', 'dolpa'],
   sindhupalchok: ['kathmandu', 'nuwakot', 'rasuwa', 'dolakha', 'kavrepalanchok'],
@@ -156,6 +156,70 @@ export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   udayapur: ['saptari', 'sunsari', 'dhankuta', 'bhojpur', 'khotang', 'okhaldhunga', 'sindhuli'],
   solukhumbu: ['dolakha', 'ramechhap', 'okhaldhunga', 'khotang', 'sankhuwasabha', 'bhojpur'],
 };
+
+// Function to validate puzzle meets the intermediate district requirement
+function validatePuzzle(puzzle: Puzzle): boolean {
+  const intermediateCount = puzzle.shortestPath.length - 2; // Exclude start and end
+  if (intermediateCount > MAX_INTERMEDIATE_DISTRICTS) {
+    console.warn(`Puzzle ${puzzle.id} exceeds maximum intermediate districts (${intermediateCount} > ${MAX_INTERMEDIATE_DISTRICTS})`);
+    return false;
+  }
+  return true;
+}
+
+// Simple manual puzzles for reliable fallback (using proper district names)
+const MANUAL_PUZZLES: Puzzle[] = [
+  {
+    id: 'puzzle_1',
+    startDistrict: 'Rupandehi',
+    endDistrict: 'Gulmi',
+    shortestPath: ['rupandehi', 'palpa', 'gulmi'],
+  },
+  {
+    id: 'puzzle_2',
+    startDistrict: 'Dhading',
+    endDistrict: 'Chitwan',
+    shortestPath: ['dhading', 'makwanpur', 'parsa', 'chitwan'],
+  },
+  {
+    id: 'puzzle_3',
+    startDistrict: 'Kathmandu',
+    endDistrict: 'Lalitpur',
+    shortestPath: ['kathmandu', 'lalitpur'],
+  },
+  {
+    id: 'puzzle_4',
+    startDistrict: 'Nawalpur',
+    endDistrict: 'Parasi',
+    shortestPath: ['nawalpur', 'parasi'],
+  }
+];
+
+// Use manual puzzles as base, can be enhanced with auto-generation at runtime
+const PUZZLES: Puzzle[] = MANUAL_PUZZLES;
+
+// Validate all puzzles on module load
+const validPuzzles = PUZZLES.filter(validatePuzzle);
+if (validPuzzles.length !== PUZZLES.length) {
+  console.warn(`${PUZZLES.length - validPuzzles.length} puzzles were removed due to exceeding the maximum intermediate districts limit.`);
+}
+
+export function getRandomPuzzle(useAutoGenerated: boolean = false, maxIntermediate: number = 10): Puzzle {
+  if (useAutoGenerated) {
+    // Generate a random puzzle with random difficulty
+    const difficulties: PuzzleDifficulty[] = ['easy', 'medium', 'hard'];
+    const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+    const generatedPuzzle = generatePuzzleWithDifficulty({ difficulty: randomDifficulty, maxIntermediate });
+    if (generatedPuzzle) {
+      return generatedPuzzle;
+    }
+    // Fallback to manual puzzles if generation fails
+  }
+  
+  // Use manual puzzles
+  const randomIndex = Math.floor(Math.random() * validPuzzles.length);
+  return validPuzzles[randomIndex];
+}
 
 /**
  * Find the shortest path between two districts using BFS.
@@ -220,10 +284,14 @@ export function generateRandomPuzzle(
     }
     const path = findShortestPath(start, end, adjacencyMap);
     if (path && path.length - 2 <= maxIntermediate) {
+      // Convert to proper case for display
+      const startDisplay = validateDistrictName(start) || start;
+      const endDisplay = validateDistrictName(end) || end;
+      
       return {
         id: `random_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-        startDistrict: start,
-        endDistrict: end,
+        startDistrict: startDisplay,
+        endDistrict: endDisplay,
         shortestPath: path,
       };
     }
@@ -291,10 +359,14 @@ export function generatePuzzleWithDifficulty(options: GeneratePuzzleOptions = {}
     if (path) {
       const intermediateCount = path.length - 2;
       if (intermediateCount >= targetMin && intermediateCount <= targetMax) {
+        // Convert to proper case for display
+        const startDisplay = validateDistrictName(start) || start;
+        const endDisplay = validateDistrictName(end) || end;
+        
         return {
           id: `generated_${difficulty}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-          startDistrict: start,
-          endDistrict: end,
+          startDistrict: startDisplay,
+          endDistrict: endDisplay,
           shortestPath: path,
         };
       }
@@ -380,4 +452,3 @@ export function findAllShortestPaths(
   }
   return result;
 }
-
