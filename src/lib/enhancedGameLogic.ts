@@ -122,6 +122,13 @@ export class FeedbackSystem {
   ): { type: FeedbackType; message: string; distanceFromPath: number; pathPosition?: number } {
     const normalizedGuess = guess.trim().toLowerCase();
     
+    console.log('FeedbackSystem.getFeedbackForGuess called with:', {
+      guess,
+      normalizedGuess,
+      puzzle: puzzle.id,
+      previousGuessesSize: previousGuesses.size
+    });
+    
     // Check for duplicate guess
     if (previousGuesses.has(normalizedGuess)) {
       return {
@@ -259,6 +266,7 @@ export class GameEngine {
   private requiredIntermediates: Set<string>;
   
   constructor(puzzle: Puzzle, adjacencyMap: Record<string, string[]>) {
+    console.log('GameEngine constructor called with:', puzzle);
     this.puzzle = puzzle;
     this.adjacencyMap = adjacencyMap;
     this.allValidPaths = PathfindingCache.getAllShortestPaths(
@@ -273,9 +281,16 @@ export class GameEngine {
       const intermediates = path.slice(1, -1);
       intermediates.forEach(d => this.requiredIntermediates.add(d));
     }
+    
+    console.log('GameEngine initialized:', {
+      validPaths: this.allValidPaths.length,
+      requiredIntermediates: this.requiredIntermediates.size
+    });
   }
   
   makeGuess(district: string): GuessResult {
+    console.log('GameEngine.makeGuess called with:', district);
+    
     const feedback = FeedbackSystem.getFeedbackForGuess(
       district,
       this.puzzle,
@@ -292,6 +307,8 @@ export class GameEngine {
       pathPosition: feedback.pathPosition
     };
     
+    console.log('Guess result:', guessResult);
+    
     this.guessHistory.push(guessResult);
     this.guessedDistricts.add(district.trim().toLowerCase());
     
@@ -307,10 +324,17 @@ export class GameEngine {
     );
     
     // Check if player has guessed all intermediates for any complete path
-    return this.allValidPaths.some(path => {
+    const isWon = this.allValidPaths.some(path => {
       const intermediates = path.slice(1, -1);
       return intermediates.every(district => correctGuesses.has(district));
     });
+    
+    console.log('GameEngine.isGameWon:', {
+      correctGuesses: Array.from(correctGuesses),
+      isWon
+    });
+    
+    return isWon;
   }
   
   getProgress(): {
@@ -376,4 +400,4 @@ export class GameEngine {
     
     return null;
   }
-} 
+}

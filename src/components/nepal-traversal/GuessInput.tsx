@@ -36,13 +36,26 @@ export const GuessInput: React.FC<GuessInputProps> = ({
   const [error, setError] = useState<string | null>(null);
   const justSelected = useRef(false);
 
+  // Create case-insensitive district lookup
+  const districtLookup = useMemo(() => {
+    const lookup = new Map<string, string>();
+    DISTRICTS_NEPAL.forEach(district => {
+      lookup.set(district.toLowerCase(), district);
+    });
+    return lookup;
+  }, []);
+
   // Filter districts for autocomplete suggestions, excluding start/end
   const filteredDistricts: string[] = useMemo(() => {
     const exclude = [startDistrict, endDistrict].map(d => d.toLowerCase());
+    const query = guessDistrict.trim().toLowerCase();
+    
+    if (!query) return [];
+    
     return DISTRICTS_NEPAL.filter(
       (district: string) =>
         !exclude.includes(district.toLowerCase()) &&
-        district.toLowerCase().includes(guessDistrict.trim().toLowerCase())
+        district.toLowerCase().includes(query)
     ).slice(0, 8); // Limit to 8 for better UX
   }, [guessDistrict, startDistrict, endDistrict]);
 
@@ -61,6 +74,27 @@ export const GuessInput: React.FC<GuessInputProps> = ({
     }, 0);
   }, [isGameWon]);
 
+  // Validate and normalize district name
+  const validateDistrict = useCallback((input: string): { isValid: boolean; normalizedName: string; error: string } => {
+    const trimmed = input.trim();
+    if (!trimmed) {
+      return { isValid: false, normalizedName: '', error: 'Please enter a district' };
+    }
+
+    const excludedDistricts = [startDistrict, endDistrict].map(d => d.toLowerCase());
+    if (excludedDistricts.includes(trimmed.toLowerCase())) {
+      return { isValid: false, normalizedName: '', error: 'You cannot guess the start or end district.' };
+    }
+
+    // Find the correct case-sensitive name
+    const correctName = districtLookup.get(trimmed.toLowerCase());
+    if (!correctName) {
+      return { isValid: false, normalizedName: '', error: 'Invalid district name' };
+    }
+
+    return { isValid: true, normalizedName: correctName, error: '' };
+  }, [startDistrict, endDistrict, districtLookup]);
+
   // Add onBlur handler for input
   const handleInputBlur = useCallback(() => {
     setTimeout(() => {
@@ -69,68 +103,26 @@ export const GuessInput: React.FC<GuessInputProps> = ({
         setHighlightedIndex(null);
       }
       justSelected.current = false;
-    }, 100);
+    }, 150); // Increased timeout to prevent premature closing
   }, []);
 
   const handleFormSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isGameWon || isLoading) return;
     
-    const input = guessDistrict.trim();
-    if (!input) {
-      setError('Please enter a district');
+    const validation = validateDistrict(guessDistrict);
+    if (!validation.isValid) {
+      setError(validation.error);
       return;
     }
     
-    const excludedDistricts = [startDistrict, endDistrict].map(d => d.toLowerCase());
-    if (excludedDistricts.includes(input.toLowerCase())) {
-      setError('You cannot guess the start or end district.');
-      return;
-    }
-    
-    // Check if it's a valid district
-    const isValidDistrict = DISTRICTS_NEPAL.some(d => 
-      d.toLowerCase() === input.toLowerCase()
-    );
-    
-    if (!isValidDistrict) {
-      setError('Invalid district name');
-      return;
-    }
-    
-    onSubmit([input]);
+    console.log('Submitting guess:', validation.normalizedName); // Debug log
+    onSubmit([validation.normalizedName]);
     setGuessDistrict("");
     setPopoverOpen(false);
     setHighlightedIndex(null);
     setError(null);
-  }, [guessDistrict, isGameWon, isLoading, startDistrict, endDistrict, onSubmit]);
-
-  const handleInputEnter = useCallback(() => {
-    if (isGameWon || isLoading) return;
-    
-    const input = guessDistrict.trim();
-    if (!input) return;
-    
-    const excludedDistricts = [startDistrict, endDistrict].map(d => d.toLowerCase());
-    if (excludedDistricts.includes(input.toLowerCase())) {
-      setError('You cannot guess the start or end district.');
-      return;
-    }
-    
-    // Check if input matches a valid district
-    const match = DISTRICTS_NEPAL.find(
-      (d: string) => d.toLowerCase() === input.toLowerCase()
-    );
-    
-    if (match && !excludedDistricts.includes(match.toLowerCase())) {
-      setGuessDistrict(match);
-      setPopoverOpen(false);
-      setHighlightedIndex(null);
-      setError(null);
-    } else {
-      setError('Unknown district');
-    }
-  }, [guessDistrict, isGameWon, isLoading, startDistrict, endDistrict]);
+  }, [guessDistrict, isGameWon, isLoading, validateDistrict, onSubmit]);
 
   // Keyboard navigation for popover
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -154,9 +146,8 @@ export const GuessInput: React.FC<GuessInputProps> = ({
           e.preventDefault();
           if (highlightedIndex !== null && filteredDistricts[highlightedIndex]) {
             handleDistrictSelect(filteredDistricts[highlightedIndex]);
-          } else if (guessDistrict.trim()) {
-            handleInputEnter();
           }
+          // Don't submit form here - let the form submission handle it
           break;
         case "Escape":
           e.preventDefault();
@@ -166,14 +157,8 @@ export const GuessInput: React.FC<GuessInputProps> = ({
         default:
           break;
       }
-    } else if (e.key === "Enter" && guessDistrict.trim()) {
-      e.preventDefault();
-      handleInputEnter();
-    } else if (e.key === "Enter" && guessDistrict.trim() === "") {
-      e.preventDefault();
-      handleFormSubmit(e as any);
     }
-  }, [isGameWon, isLoading, popoverOpen, filteredDistricts, highlightedIndex, guessDistrict, handleDistrictSelect, handleInputEnter, handleFormSubmit]);
+  }, [isGameWon, isLoading, popoverOpen, filteredDistricts, highlightedIndex, handleDistrictSelect]);
 
   // Control popover state based on input value
   useEffect(() => {

@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Puzzle } from '@/types';
 import { GuessResult } from '@/lib/enhancedGameLogic';
-// import { InteractiveNepalMap } from '@/components/InteractiveNepalMap'; // Removed
 import { GuessInput } from '@/components/nepal-traversal/GuessInput';
 import { GuessHistoryCard } from '@/components/nepal-traversal/GuessHistoryCard';
 
@@ -28,10 +27,17 @@ export function ClassicMode({
   lastFeedback,
   allCorrectIntermediates
 }: ClassicModeProps) {
+  // Determine if undo is available
+  const canUndo = guessHistory.length > 0;
+  
   return (
     <div className="flex flex-col gap-4">
       <GuessInput
-        onSubmit={([district]) => onGuess(district)}
+        onSubmit={([district]) => {
+          console.log('GuessInput onSubmit called with:', district); // Debug log
+          onGuess(district);
+        }}
+        onUndo={onUndo}
         isLoading={false}
         startDistrict={puzzle.startDistrict}
         endDistrict={puzzle.endDistrict}
@@ -40,8 +46,10 @@ export function ClassicMode({
           message: lastFeedback.message
         } : null}
         isGameWon={isGameWon}
+        canUndo={canUndo}
       />
-      {/* Display the answer (shortest path) for testing */}
+      
+      {/* Display the answer (shortest path) for testing - can be removed in production */}
       <div className="mb-2 p-2 bg-yellow-50 border border-yellow-300 rounded text-yellow-900 text-sm font-mono flex flex-wrap items-center gap-2">
         <span className="font-bold">Answer:</span>
         {puzzle.shortestPath.map((district, idx) => (
@@ -51,6 +59,7 @@ export function ClassicMode({
           </React.Fragment>
         ))}
       </div>
+      
       <div className="flex flex-row gap-4">
         <div className="max-w-xs w-full">
           <GuessHistoryCard
@@ -61,6 +70,19 @@ export function ClassicMode({
           />
         </div>
       </div>
+      
+      {/* Game won celebration */}
+      {isGameWon && (
+        <div className="p-4 bg-green-50 border border-green-300 rounded-lg text-green-800">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🎉</span>
+            <div>
+              <div className="font-bold text-lg">Congratulations!</div>
+              <div className="text-sm">You found the shortest path in {guessHistory.length} guesses!</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-} 
+}
