@@ -1,206 +1,128 @@
-// Updated NepalMap.tsx to work with your SVG structure
 import React, { useMemo, useState, useEffect } from 'react';
-import { DistrictPath } from './DistrictPath';
-import { MapLegend } from './MapLegend';
-import { createDistrictStateMap, normalizeDistrictName } from './map-utils';
+import { normalizeDistrictName } from './map-utils';
 import { DISTRICTS_NEPAL, validateDistrictName } from '@/lib/puzzle';
 
 interface NepalMapProps {
   startDistrict: string;
   endDistrict: string;
   correctGuesses: string[];
-  incorrectGuesses?: string[];
-  onDistrictClick?: (district: string) => void;
   className?: string;
 }
 
-// District path data extracted from your SVG
 interface DistrictPathData {
   id: string;
   name: string;
   pathData: string;
 }
 
+// District state for visual indication only
+type DistrictState = 'default' | 'start' | 'end' | 'correct';
+
 export const NepalMap: React.FC<NepalMapProps> = ({
   startDistrict,
   endDistrict,
   correctGuesses,
-  incorrectGuesses = [],
-  onDistrictClick,
   className = ""
 }) => {
   const [districtPaths, setDistrictPaths] = useState<DistrictPathData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Game state for district components
-  const gameState = useMemo(() => ({
-    startDistrict,
-    endDistrict,
-    correctGuesses,
-    incorrectGuesses,
-    isGameWon: false // You can pass this from props if needed
-  }), [startDistrict, endDistrict, correctGuesses, incorrectGuesses]);
-
-  // Create district state mapping for performance
-  const districtStates = useMemo(() => {
-    return createDistrictStateMap(gameState);
-  }, [gameState]);
-
-  // Load and parse SVG file
+  // Load SVG file
   useEffect(() => {
-    const loadNepalMap = async () => {
+    const loadMap = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
-
-        // Load SVG from assets folder
-        const response = await fetch('/src/assets/maps/nepal-districts.svg');
-        if (!response.ok) {
-          throw new Error(`Failed to load SVG: ${response.statusText}`);
-        }
-
+        const response = await fetch('/maps/nepal-districts.svg');
+        if (!response.ok) throw new Error('Failed to load map');
+        
         const svgContent = await response.text();
-        const parsedDistricts = parseSVGDistricts(svgContent);
-        
-        console.log(`Loaded ${parsedDistricts.length} districts from SVG`);
-        
-        // Validate against expected districts
-        const foundNames = parsedDistricts.map(d => d.name);
-        const missing = DISTRICTS_NEPAL.filter(expected => 
-          !foundNames.some(found => 
-            normalizeDistrictName(found) === normalizeDistrictName(expected)
-          )
-        );
-        
-        if (missing.length > 0) {
-          console.warn('Missing districts in SVG:', missing);
-        }
-        
-        setDistrictPaths(parsedDistricts);
+        const districts = parseSVG(svgContent);
+        setDistrictPaths(districts);
       } catch (err) {
-        console.error('Failed to load Nepal map:', err);
-        setError('Failed to load map. Using fallback.');
+        console.error('Map loading failed:', err);
+        setError('Map not available');
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadNepalMap();
+    loadMap();
   }, []);
 
-  // Parse SVG content and extract district paths
-  const parseSVGDistricts = (svgContent: string): DistrictPathData[] => {
+  // Simple SVG parser
+  const parseSVG = (content: string): DistrictPathData[] => {
     const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
-    const pathElements = svgDoc.querySelectorAll('path[id]');
+    const doc = parser.parseFromString(content, 'image/svg+xml');
+    const paths = doc.querySelectorAll('path[id]');
     
-    const districts: DistrictPathData[] = [];
-    
-    pathElements.forEach((pathElement) => {
-      const id = pathElement.getAttribute('id');
-      const pathData = pathElement.getAttribute('d');
+    return Array.from(paths).map(path => {
+      const id = path.getAttribute('id') || '';
+      const pathData = path.getAttribute('d') || '';
+      const name = mapIdToName(id);
       
-      if (!id || !pathData) return;
-      
-      // Map SVG id to proper district name
-      const districtName = mapSVGIdToDistrictName(id);
-      
-      if (districtName) {
-        districts.push({
-          id,
-          name: districtName,
-          pathData
-        });
-      } else {
-        console.warn(`Could not map SVG id "${id}" to a known district`);
-      }
-    });
-    
-    return districts;
+      return { id, name: name || id, pathData };
+    }).filter(d => d.name && d.pathData);
   };
 
-  // Map SVG id to proper district name
-  const mapSVGIdToDistrictName = (svgId: string): string | null => {
-    // Your SVG uses lowercase ids like "achham", "kathmandu", etc.
-    // We need to map these to proper district names
+  // Map SVG id to district name
+  const mapIdToName = (id: string): string | null => {
+    const capitalized = id.charAt(0).toUpperCase() + id.slice(1).toLowerCase();
+    return validateDistrictName(capitalized);
+  };
+
+  // Get district visual state
+  const getDistrictState = (districtName: string): DistrictState => {
+    const normalized = normalizeDistrictName(districtName);
     
-    // First, try direct validation
-    let districtName = validateDistrictName(svgId);
-    if (districtName) return districtName;
+    if (normalizeDistrictName(startDistrict) === normalized) return 'start';
+    if (normalizeDistrictName(endDistrict) === normalized) return 'end';
     
-    // Try with capitalization
-    const capitalized = svgId.charAt(0).toUpperCase() + svgId.slice(1).toLowerCase();
-    districtName = validateDistrictName(capitalized);
-    if (districtName) return districtName;
+    const isCorrect = correctGuesses.some(guess => 
+      normalizeDistrictName(guess) === normalized
+    );
+    if (isCorrect) return 'correct';
     
-    // Special mappings for your SVG ids that might not match exactly
-    const specialMappings: Record<string, string> = {
-      // Add any special cases here if needed
-      'rukumeast': 'Rukum East',
-      'rukumwest': 'Rukum West',
-      // Add more if you find mismatches
-    };
+    return 'default';
+  };
+
+  // Get CSS classes for district state
+  const getDistrictClasses = (state: DistrictState): string => {
+    const base = "transition-colors duration-200";
     
-    if (specialMappings[svgId.toLowerCase()]) {
-      return specialMappings[svgId.toLowerCase()];
+    switch (state) {
+      case 'start':
+        return `${base} fill-green-500 stroke-green-700 stroke-2`;
+      case 'end':
+        return `${base} fill-red-500 stroke-red-700 stroke-2`;
+      case 'correct':
+        return `${base} fill-yellow-500 stroke-yellow-700 stroke-2`;
+      default:
+        return `${base} fill-gray-200 stroke-gray-400 stroke-1`;
     }
-    
-    return null;
-  };
-
-  // Handlers
-  const handleDistrictClick = (districtName: string) => {
-    console.log('District clicked:', districtName);
-    onDistrictClick?.(districtName);
-  };
-
-  const handleDistrictHover = (districtName: string | null) => {
-    // Optional: Handle hover events
-    console.log('District hovered:', districtName);
   };
 
   // Loading state
   if (isLoading) {
     return (
       <div className={`w-full max-w-4xl mx-auto ${className}`}>
-        <div className="relative bg-blue-50 rounded-lg border border-gray-200 overflow-hidden">
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading Nepal map...</p>
-            </div>
-          </div>
+        <div className="bg-blue-50 rounded-lg border border-gray-200 p-8 text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading map...</p>
         </div>
       </div>
     );
   }
 
-  // Error state with fallback
+  // Error or fallback state
   if (error || districtPaths.length === 0) {
     return (
       <div className={`w-full max-w-4xl mx-auto ${className}`}>
-        <div className="relative bg-blue-50 rounded-lg border border-gray-200 overflow-hidden">
-          <FallbackMap
-            gameState={gameState}
-            districtStates={districtStates}
-            onDistrictClick={handleDistrictClick}
-            onDistrictHover={handleDistrictHover}
-          />
-          
-          <MapLegend
+        <div className="bg-blue-50 rounded-lg border border-gray-200 p-4">
+          <SimpleFallbackMap
             startDistrict={startDistrict}
             endDistrict={endDistrict}
-            correctGuessCount={correctGuesses.length}
-            incorrectGuessCount={incorrectGuesses.length}
-            showIncorrect={incorrectGuesses.length > 0}
-            position="top-right"
-            variant="compact"
+            correctGuesses={correctGuesses}
           />
-        </div>
-        
-        <div className="mt-2 text-center text-sm text-orange-600">
-          ⚠️ Using simplified map - {error || 'No districts found in SVG'}
         </div>
       </div>
     );
@@ -208,110 +130,116 @@ export const NepalMap: React.FC<NepalMapProps> = ({
 
   return (
     <div className={`w-full max-w-4xl mx-auto ${className}`}>
+      {/* Map Container */}
       <div className="relative bg-blue-50 rounded-lg border border-gray-200 overflow-hidden">
         <svg
           viewBox="0 0 840 595"
           className="w-full h-auto"
           style={{ minHeight: '300px', maxHeight: '500px' }}
-          role="img"
-          aria-label="Interactive map of Nepal showing districts"
+          aria-label="Nepal districts map showing game progress"
         >
-          <title>Nepal Districts Map</title>
+          <title>Nepal Map - Visual Progress Indicator</title>
           
           {/* Background */}
           <rect width="840" height="595" fill="#f0f9ff" />
           
-          {/* Render all district paths */}
-          {districtPaths.map(({ id, name, pathData }) => (
-            <DistrictPath
-              key={id}
-              id={id}
-              name={name}
-              pathData={pathData}
-              state={districtStates[name] || 'default'}
-              gameState={gameState}
-              onClick={handleDistrictClick}
-              onHover={handleDistrictHover}
-              showTooltip={true}
-            />
-          ))}
+          {/* Render all districts - visual only, no interactions */}
+          {districtPaths.map(({ id, name, pathData }) => {
+            const state = getDistrictState(name);
+            return (
+              <path
+                key={id}
+                id={id}
+                d={pathData}
+                className={getDistrictClasses(state)}
+                aria-label={`${name} district - ${state}`}
+              />
+            );
+          })}
         </svg>
         
-        {/* Legend */}
-        <MapLegend
-          startDistrict={startDistrict}
-          endDistrict={endDistrict}
-          correctGuessCount={correctGuesses.length}
-          incorrectGuessCount={incorrectGuesses.length}
-          showIncorrect={incorrectGuesses.length > 0}
-          position="top-right"
-          variant="detailed"
-        />
-      </div>
-      
-      {/* Map Status */}
-      <div className="mt-3 text-center text-sm text-gray-600">
-        <span className="font-medium text-green-600">{startDistrict}</span>
-        {" → "}
-        <span className="font-medium text-red-600">{endDistrict}</span>
-        {correctGuesses.length > 0 && (
-          <span className="ml-2 text-yellow-600">
-            ({correctGuesses.length} correct guess{correctGuesses.length !== 1 ? 'es' : ''})
-          </span>
-        )}
-      </div>
-      
-      {/* Debug info in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-2 text-xs text-gray-500 text-center">
-          Map loaded: {districtPaths.length} districts found
+        {/* Simple Legend */}
+        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Legend</h3>
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-3 bg-green-500 rounded border border-green-700"></div>
+              <span className="text-gray-800">Start: {startDistrict}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-3 bg-red-500 rounded border border-red-700"></div>
+              <span className="text-gray-800">End: {endDistrict}</span>
+            </div>
+            {correctGuesses.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-3 bg-yellow-500 rounded border border-yellow-700"></div>
+                <span>Correct ({correctGuesses.length})</span>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-// Fallback component with simplified placeholder map
-const FallbackMap: React.FC<{
-  gameState: any;
-  districtStates: Record<string, any>;
-  onDistrictClick: (district: string) => void;
-  onDistrictHover: (district: string | null) => void;
-}> = ({ gameState, districtStates, onDistrictClick, onDistrictHover }) => {
-  // Sample districts for fallback
+// Simple fallback map when SVG doesn't load
+const SimpleFallbackMap: React.FC<{
+  startDistrict: string;
+  endDistrict: string;
+  correctGuesses: string[];
+}> = ({ startDistrict, endDistrict, correctGuesses }) => {
+  // Sample districts for demonstration
   const sampleDistricts = [
-    { id: 'kathmandu', name: 'Kathmandu', path: 'M380 180 L420 180 L420 220 L380 220 Z' },
-    { id: 'lalitpur', name: 'Lalitpur', path: 'M380 220 L420 220 L420 260 L380 260 Z' },
-    { id: 'bhaktapur', name: 'Bhaktapur', path: 'M420 180 L460 180 L460 220 L420 220 Z' },
-    { id: 'chitwan', name: 'Chitwan', path: 'M340 280 L440 280 L440 320 L340 320 Z' },
+    { name: 'Kathmandu', path: 'M380 180 L420 180 L420 220 L380 220 Z' },
+    { name: 'Lalitpur', path: 'M380 220 L420 220 L420 260 L380 260 Z' },
+    { name: 'Bhaktapur', path: 'M420 180 L460 180 L460 220 L420 220 Z' },
+    { name: 'Chitwan', path: 'M340 280 L440 280 L440 320 L340 320 Z' },
+    { name: 'Kaski', path: 'M200 160 L280 160 L280 240 L200 240 Z' },
   ];
 
+  const getState = (name: string) => {
+    if (name === startDistrict) return 'start';
+    if (name === endDistrict) return 'end';
+    if (correctGuesses.includes(name)) return 'correct';
+    return 'default';
+  };
+
+  const getClasses = (state: string) => {
+    switch (state) {
+      case 'start': return 'fill-green-500 stroke-green-700 stroke-2';
+      case 'end': return 'fill-red-500 stroke-red-700 stroke-2';
+      case 'correct': return 'fill-yellow-500 stroke-yellow-700 stroke-2';
+      default: return 'fill-gray-200 stroke-gray-400 stroke-1';
+    }
+  };
+
   return (
-    <svg
-      viewBox="0 0 840 595"
-      className="w-full h-auto"
-      style={{ minHeight: '300px', maxHeight: '500px' }}
-    >
-      <rect width="840" height="595" fill="#f0f9ff" />
+    <div className="text-center">
+      <svg
+        viewBox="0 0 800 400"
+        className="w-full h-auto border rounded"
+        style={{ maxHeight: '300px' }}
+      >
+        <rect width="800" height="400" fill="#f0f9ff" />
+        
+        {sampleDistricts.map(({ name, path }) => (
+          <path
+            key={name}
+            d={path}
+            className={getClasses(getState(name))}
+          />
+        ))}
+        
+        <text x="400" y="50" textAnchor="middle" className="fill-gray-500 text-sm font-semibold">
+          Nepal Map (Simplified)
+        </text>
+      </svg>
       
-      {sampleDistricts.map(({ id, name, path }) => (
-        <DistrictPath
-          key={id}  
-          id={id}
-          name={name}
-          pathData={path}
-          state={districtStates[name] || 'default'}
-          gameState={gameState}
-          onClick={onDistrictClick}
-          onHover={onDistrictHover}
-          showTooltip={true}
-        />
-      ))}
-      
-      <text x="420" y="50" textAnchor="middle" className="fill-gray-500 text-sm font-semibold">
-        Nepal Districts Map (Fallback)
-      </text>
-    </svg>
+      <p className="text-xs text-gray-500 mt-2">
+        Map shows visual progress only • Districts shown: {sampleDistricts.length}/77
+      </p>
+    </div>
   );
 };
 

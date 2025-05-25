@@ -3,6 +3,7 @@ import type { Puzzle } from '@/types';
 import { GuessResult } from '@/lib/enhancedGameLogic';
 import { GuessInput } from '@/components/nepal-traversal/GuessInput';
 import { GuessHistoryCard } from '@/components/nepal-traversal/GuessHistoryCard';
+import NepalMap from '@/components/nepal-map/NepalMap';
 
 interface ClassicModeProps {
   puzzle: Puzzle;
@@ -30,24 +31,58 @@ export function ClassicMode({
   // Determine if undo is available
   const canUndo = guessHistory.length > 0;
   
+  // Get correct and incorrect guesses for map
+  const correctGuesses = guessHistory
+    .filter(g => g.isCorrect)
+    .map(g => g.district);
+  
+  const incorrectGuesses = guessHistory
+    .filter(g => !g.isCorrect && g.feedback !== 'duplicate')
+    .map(g => g.district);
+
+  // Map is now visual-only, no click handling needed
+  
   return (
-    <div className="flex flex-col gap-4">
-      <GuessInput
-        onSubmit={([district]) => {
-          console.log('GuessInput onSubmit called with:', district); // Debug log
-          onGuess(district);
-        }}
-        onUndo={onUndo}
-        isLoading={false}
-        startDistrict={puzzle.startDistrict}
-        endDistrict={puzzle.endDistrict}
-        latestGuessResult={lastFeedback ? {
-          type: lastFeedback.type === 'perfect' ? 'success' : 'error',
-          message: lastFeedback.message
-        } : null}
-        isGameWon={isGameWon}
-        canUndo={canUndo}
-      />
+    <div className="flex flex-col gap-6">
+      {/* Main game content */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left side: Game inputs and history */}
+        <div className="flex flex-col gap-4 lg:w-1/3">
+          <GuessInput
+            onSubmit={([district]) => {
+              console.log('GuessInput onSubmit called with:', district);
+              onGuess(district);
+            }}
+            onUndo={onUndo}
+            isLoading={false}
+            startDistrict={puzzle.startDistrict}
+            endDistrict={puzzle.endDistrict}
+            latestGuessResult={lastFeedback ? {
+              type: lastFeedback.type === 'perfect' ? 'success' : 'error',
+              message: lastFeedback.message
+            } : null}
+            isGameWon={isGameWon}
+            canUndo={canUndo}
+          />
+          
+          <GuessHistoryCard
+            userPath={userPath}
+            allCorrectIntermediates={allCorrectIntermediates}
+            startDistrict={puzzle.startDistrict}
+            endDistrict={puzzle.endDistrict}
+          />
+        </div>
+        
+        {/* Right side: Nepal Map */}
+        <div className="flex-1 lg:w-2/3">
+          <NepalMap
+            startDistrict={puzzle.startDistrict}
+            endDistrict={puzzle.endDistrict}
+            correctGuesses={correctGuesses}
+            className="w-full"
+          />
+        </div>
+      </div>
       
       {/* Display the answer (shortest path) for testing - can be removed in production */}
       <div className="mb-2 p-2 bg-yellow-50 border border-yellow-300 rounded text-yellow-900 text-sm font-mono flex flex-wrap items-center gap-2">
@@ -58,17 +93,6 @@ export function ClassicMode({
             {idx < puzzle.shortestPath.length - 1 && <span className="mx-1">→</span>}
           </React.Fragment>
         ))}
-      </div>
-      
-      <div className="flex flex-row gap-4">
-        <div className="max-w-xs w-full">
-          <GuessHistoryCard
-            userPath={userPath}
-            allCorrectIntermediates={allCorrectIntermediates}
-            startDistrict={puzzle.startDistrict}
-            endDistrict={puzzle.endDistrict}
-          />
-        </div>
       </div>
       
       {/* Game won celebration */}
