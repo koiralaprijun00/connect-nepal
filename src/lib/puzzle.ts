@@ -101,10 +101,10 @@ export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   sunsari: ['saptari', 'morang', 'udayapur', 'dhankuta'],
   
   chitwan: ['makwanpur', 'parsa', 'nawalpur', 'tanahu', 'gorkha', 'dhading'],
-  dhading: ['kathmandu', 'nuwakot', 'gorkha', 'makwanpur', 'rasuwa', 'chitwan'],
+  dhading: ['kathmandu', 'nuwakot', 'rasuwa', 'gorkha', 'makwanpur', 'chitwan'],
   nuwakot: ['kathmandu', 'dhading', 'rasuwa', 'sindhupalchok'],
-  rasuwa: ['nuwakot', 'dhading', 'gorkha', 'sindhupalchok'],
-  gorkha: ['dhading', 'lamjung', 'tanahu', 'rasuwa', 'manang', 'chitwan'],
+  rasuwa: ['nuwakot', 'dhading', 'sindhupalchok'],
+  gorkha: ['dhading', 'lamjung', 'tanahu', 'manang', 'chitwan'],
   lamjung: ['gorkha', 'tanahu', 'kaski', 'manang'],
   tanahu: ['lamjung', 'kaski', 'syangja', 'chitwan', 'gorkha', 'nawalpur'],
   kaski: ['lamjung', 'tanahu', 'syangja', 'parbat', 'myagdi', 'manang'],
@@ -140,12 +140,12 @@ export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   mugu: ['bajura', 'humla', 'jumla', 'kalikot', 'dolpa'],
   humla: ['bajura', 'mugu', 'dolpa', 'bajhang'],
   jumla: ['mugu', 'kalikot', 'dolpa', 'rukum west'],
-  dolpa: ['rukum west', 'jumla', 'mugu', 'humla', 'mustang', 'myagdi', 'baglung', 'jajarkot', 'manang'],
-  mustang: ['dolpa', 'myagdi', 'manang'],
+  dolpa: ['mustang', 'rukum west', 'jumla', 'mugu', 'humla', 'myagdi', 'baglung', 'jajarkot'],
+  mustang: ['manang', 'dolpa', 'myagdi'],
   myagdi: ['mustang', 'dolpa', 'baglung', 'parbat', 'kaski', 'rukum east'],
   baglung: ['myagdi', 'parbat', 'gulmi', 'rukum east', 'dolpa'],
   parbat: ['gulmi', 'baglung', 'kaski', 'myagdi', 'syangja'],
-  manang: ['gorkha', 'lamjung', 'kaski', 'mustang', 'dolpa'],
+  manang: ['gorkha', 'lamjung', 'kaski', 'mustang'], // Remove 'dolpa'
   sindhupalchok: ['kathmandu', 'nuwakot', 'rasuwa', 'dolakha', 'kavrepalanchok'],
   kavrepalanchok: ['bhaktapur', 'lalitpur', 'makwanpur', 'sindhupalchok', 'ramechhap', 'sindhuli'],
   dolakha: ['sindhupalchok', 'ramechhap', 'solukhumbu'],
@@ -164,6 +164,17 @@ export const DISTRICT_ADJACENCY: Record<string, string[]> = {
   dhankuta: ['sunsari', 'morang', 'ilam', 'panchthar', 'terhathum', 'bhojpur', 'udayapur'],
   bhojpur: ['dhankuta', 'terhathum', 'sankhuwasabha', 'solukhumbu', 'khotang', 'udayapur'],
 };
+
+// Add this to your code to find ALL asymmetric issues:
+function validateAdjacencies(adjacencyMap: Record<string, string[]>): void {
+  for (const [district, neighbors] of Object.entries(adjacencyMap)) {
+    for (const neighbor of neighbors) {
+      if (!adjacencyMap[neighbor]?.includes(district)) {
+        console.error(`❌ Asymmetric: ${district} → ${neighbor}`);
+      }
+    }
+  }
+}
 
 // Route verification and manual fixing utilities
 export interface RouteVerificationResult {
