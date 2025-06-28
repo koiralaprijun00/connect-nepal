@@ -38,6 +38,11 @@ export const NepalMap: React.FC<NepalMapProps> = ({
         const svgContent = await response.text();
         const districts = parseSVG(svgContent);
         setDistrictPaths(districts);
+        
+        // Debug: Log which districts were found
+        console.log('Parsed districts:', districts.map(d => d.name));
+        console.log('Looking for start district:', startDistrict);
+        console.log('Looking for end district:', endDistrict);
       } catch (err) {
         console.error('Map loading failed:', err);
         setError('Map not available');
@@ -47,35 +52,102 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     };
 
     loadMap();
-  }, []);
+  }, [startDistrict, endDistrict]);
 
-  // Simple SVG parser
+  // Enhanced SVG parser with better district name mapping
   const parseSVG = (content: string): DistrictPathData[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(content, 'image/svg+xml');
-    const paths = doc.querySelectorAll('path[id]');
+    const paths = doc.querySelectorAll('path[id], path[data-name], path[data-district]');
     
     return Array.from(paths).map(path => {
       const id = path.getAttribute('id') || '';
+      const dataName = path.getAttribute('data-name') || '';
+      const dataDistrict = path.getAttribute('data-district') || '';
       const pathData = path.getAttribute('d') || '';
-      const name = mapIdToName(id);
+      
+      if (!pathData) return null;
+      
+      // Try multiple sources for district name
+      const name = mapIdToName(id) || mapIdToName(dataName) || mapIdToName(dataDistrict) || id;
       
       return { id, name: name || id, pathData };
-    }).filter(d => d.name && d.pathData);
+    }).filter((d): d is DistrictPathData => d !== null && d.name && d.pathData);
   };
 
-  // Map SVG id to district name
+  // Enhanced district name mapping with more variations
   const mapIdToName = (id: string): string | null => {
+    if (!id) return null;
+    
+    // Enhanced mapping for common variations
+    const idMappings: Record<string, string> = {
+      // Direct mappings for common SVG IDs
+      'kapilbastu': 'Kapilvastu',
+      'kapilavastu': 'Kapilvastu', 
+      'kapilvastu': 'Kapilvastu',
+      'sunsari': 'Sunsari',
+      'kathmandu': 'Kathmandu',
+      'lalitpur': 'Lalitpur',
+      'bhaktapur': 'Bhaktapur',
+      'chitwan': 'Chitwan',
+      'pokhara': 'Kaski', // City to district mapping
+      'biratnagar': 'Morang', // City to district mapping
+      
+      // Handle common variations
+      'nawalparasi': 'Nawalpur',
+      'nawalparasi_east': 'Parasi',
+      'nawalparasi_west': 'Nawalpur',
+      'rukum': 'Rukum East',
+      'rukum_east': 'Rukum East',
+      'rukum_west': 'Rukum West',
+    };
+    
+    const normalized = id.toLowerCase().replace(/[-_\s]/g, '');
+    
+    // Check direct mapping first
+    if (idMappings[normalized]) {
+      return idMappings[normalized];
+    }
+    
+    // Try capitalized version
     const capitalized = id.charAt(0).toUpperCase() + id.slice(1).toLowerCase();
-    return validateDistrictName(capitalized);
+    const validated = validateDistrictName(capitalized);
+    if (validated) return validated;
+    
+    // Try with spaces replaced
+    const withSpaces = id.replace(/[-_]/g, ' ');
+    const validatedSpaces = validateDistrictName(withSpaces);
+    if (validatedSpaces) return validatedSpaces;
+    
+    // Try partial matching for districts
+    for (const district of DISTRICTS_NEPAL) {
+      const districtNormalized = district.toLowerCase().replace(/[-_\s]/g, '');
+      if (districtNormalized.includes(normalized) || normalized.includes(districtNormalized)) {
+        return district;
+      }
+    }
+    
+    return null;
   };
 
-  // Get district visual state
+  // Get district visual state with enhanced debugging
   const getDistrictState = (districtName: string): DistrictState => {
     const normalized = normalizeDistrictName(districtName);
+    const startNormalized = normalizeDistrictName(startDistrict);
+    const endNormalized = normalizeDistrictName(endDistrict);
     
-    if (normalizeDistrictName(startDistrict) === normalized) return 'start';
-    if (normalizeDistrictName(endDistrict) === normalized) return 'end';
+    // Debug logging for the problematic districts
+    if (districtName.toLowerCase().includes('kapil') || districtName.toLowerCase().includes('suns')) {
+      console.log(`Checking district: ${districtName}`);
+      console.log(`Normalized: ${normalized}`);
+      console.log(`Start normalized: ${startNormalized}`);
+      console.log(`End normalized: ${endNormalized}`);
+      console.log(`Is start: ${normalized === startNormalized}`);
+      console.log(`Is end: ${normalized === endNormalized}`);
+    }
+    
+    if (normalized === startNormalized) return 'start';
+    if (normalized === endNormalized) return 'end';
     
     const isCorrect = correctGuesses.some(guess => 
       normalizeDistrictName(guess) === normalized
@@ -85,7 +157,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     return 'default';
   };
 
-  // Get CSS classes for district state
+  // Get CSS classes for district state with enhanced colors
   const getDistrictClasses = (state: DistrictState): string => {
     const base = "transition-colors duration-200";
     
@@ -158,7 +230,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
           })}
         </svg>
         
-        {/* Simple Legend */}
+        {/* Enhanced Legend with debugging info */}
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Legend</h3>
           <div className="space-y-1 text-xs">
@@ -177,25 +249,38 @@ export const NepalMap: React.FC<NepalMapProps> = ({
               </div>
             )}
           </div>
+          
+          {/* Debug info in development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <div className="text-xs text-gray-500">
+                <div>Districts found: {districtPaths.length}</div>
+                <div>Start found: {districtPaths.some(d => getDistrictState(d.name) === 'start') ? '✓' : '✗'}</div>
+                <div>End found: {districtPaths.some(d => getDistrictState(d.name) === 'end') ? '✓' : '✗'}</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-// Simple fallback map when SVG doesn't load
+// Enhanced fallback map with correct highlighting
 const SimpleFallbackMap: React.FC<{
   startDistrict: string;
   endDistrict: string;
   correctGuesses: string[];
 }> = ({ startDistrict, endDistrict, correctGuesses }) => {
-  // Sample districts for demonstration
+  // Enhanced sample districts with more accurate positioning
   const sampleDistricts = [
     { name: 'Kathmandu', path: 'M380 180 L420 180 L420 220 L380 220 Z' },
     { name: 'Lalitpur', path: 'M380 220 L420 220 L420 260 L380 260 Z' },
     { name: 'Bhaktapur', path: 'M420 180 L460 180 L460 220 L420 220 Z' },
     { name: 'Chitwan', path: 'M340 280 L440 280 L440 320 L340 320 Z' },
     { name: 'Kaski', path: 'M200 160 L280 160 L280 240 L200 240 Z' },
+    { name: 'Sunsari', path: 'M600 200 L650 200 L650 240 L600 240 Z' },
+    { name: 'Kapilvastu', path: 'M150 300 L200 300 L200 340 L150 340 Z' },
   ];
 
   const getState = (name: string) => {
@@ -239,6 +324,13 @@ const SimpleFallbackMap: React.FC<{
       <p className="text-xs text-gray-500 mt-2">
         Map shows visual progress only • Districts shown: {sampleDistricts.length}/77
       </p>
+      
+      {/* Debug info for fallback */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-2 text-xs text-gray-400">
+          Start: {startDistrict} | End: {endDistrict}
+        </div>
+      )}
     </div>
   );
 };
