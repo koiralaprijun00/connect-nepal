@@ -44,6 +44,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
         console.log('Total districts parsed:', districts.length);
         console.log('Looking for start district:', startDistrict);
         console.log('Looking for end district:', endDistrict);
+        console.log('Correct guesses to highlight:', correctGuesses);
         
         // Check if start and end districts are found
         const startFound = districts.find(d => 
@@ -56,11 +57,13 @@ export const NepalMap: React.FC<NepalMapProps> = ({
         console.log('Start district found:', startFound ? `✓ (${startFound.name})` : '✗');
         console.log('End district found:', endFound ? `✓ (${endFound.name})` : '✗');
         
-        if (!endFound) {
-          console.log('Available districts containing "chitwan":', 
-            districts.filter(d => d.name.toLowerCase().includes('chitwan')));
-          console.log('All district names:', districts.map(d => d.name).sort());
-        }
+        // Check correct guesses mapping
+        correctGuesses.forEach(guess => {
+          const found = districts.find(d => 
+            normalizeDistrictName(d.name) === normalizeDistrictName(guess)
+          );
+          console.log(`Correct guess "${guess}" found:`, found ? `✓ (${found.name})` : '✗');
+        });
         
       } catch (err) {
         console.error('Map loading failed:', err);
@@ -71,7 +74,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     };
 
     loadMap();
-  }, [startDistrict, endDistrict]);
+  }, [startDistrict, endDistrict, correctGuesses]);
 
   // Enhanced SVG parser with comprehensive district name mapping
   const parseSVG = (content: string): DistrictPathData[] => {
@@ -116,7 +119,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     
     // Enhanced mapping for common variations and problematic districts
     const idMappings: Record<string, string> = {
-      // Chitwan variations - the main issue
+      // Chitwan variations
       'chitwan': 'Chitwan',
       'chitawan': 'Chitwan',
       'chitwon': 'Chitwan',
@@ -125,6 +128,26 @@ export const NepalMap: React.FC<NepalMapProps> = ({
       'district_chitwan': 'Chitwan',
       'np_chitwan': 'Chitwan',
       'npl_chitwan': 'Chitwan',
+      
+      // Makwanpur variations
+      'makwanpur': 'Makwanpur',
+      'makvanpur': 'Makwanpur',
+      'makwanpoor': 'Makwanpur',
+      'makwanpur_district': 'Makwanpur',
+      
+      // Kavrepalanchok variations
+      'kavrepalanchok': 'Kavrepalanchok',
+      'kavrepalanchowk': 'Kavrepalanchok',
+      'kavre': 'Kavrepalanchok',
+      'kavrepalanchok_district': 'Kavrepalanchok',
+      'kavre_palanchok': 'Kavrepalanchok',
+      'kavre_palanchowk': 'Kavrepalanchok',
+      
+      // Sindhupalchok variations
+      'sindhupalchok': 'Sindhupalchok',
+      'sindhupalchowk': 'Sindhupalchok',
+      'sindhuli': 'Sindhuli',
+      'sindhupalchok_district': 'Sindhupalchok',
       
       // Other common mappings
       'kapilbastu': 'Kapilvastu',
@@ -160,9 +183,18 @@ export const NepalMap: React.FC<NepalMapProps> = ({
       return idMappings[normalized];
     }
     
-    // Special handling for Chitwan - check if ID contains chitwan-like patterns
+    // Special handling for specific districts - check if ID contains district-like patterns
     if (normalized.includes('chitw') || normalized.includes('chitv')) {
       return 'Chitwan';
+    }
+    if (normalized.includes('makwan') || normalized.includes('makvan')) {
+      return 'Makwanpur';
+    }
+    if (normalized.includes('kavre') || normalized.includes('palanchok') || normalized.includes('palanchowk')) {
+      return 'Kavrepalanchok';
+    }
+    if (normalized.includes('sindhup') && normalized.includes('chok')) {
+      return 'Sindhupalchok';
     }
     
     // Try capitalized version
@@ -186,7 +218,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     return null;
   };
 
-  // Get district visual state with enhanced debugging
+  // Get district visual state with enhanced debugging and correct guess checking
   const getDistrictState = (districtName: string): DistrictState => {
     const normalized = normalizeDistrictName(districtName);
     const startNormalized = normalizeDistrictName(startDistrict);
@@ -194,22 +226,34 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     
     // Enhanced debug logging for problematic districts
     if (districtName.toLowerCase().includes('chitwan') || 
-        districtName.toLowerCase().includes('morang') ||
-        districtName.toLowerCase().includes('kapil')) {
+        districtName.toLowerCase().includes('makwan') ||
+        districtName.toLowerCase().includes('kavre') ||
+        districtName.toLowerCase().includes('sindhup')) {
       console.log(`🔍 Checking district: "${districtName}"`);
       console.log(`   Normalized: "${normalized}"`);
       console.log(`   Start normalized: "${startNormalized}"`);
       console.log(`   End normalized: "${endNormalized}"`);
       console.log(`   Is start: ${normalized === startNormalized}`);
       console.log(`   Is end: ${normalized === endNormalized}`);
+      
+      // Check correct guesses
+      const isCorrect = correctGuesses.some(guess => {
+        const guessNormalized = normalizeDistrictName(guess);
+        console.log(`   Checking against guess "${guess}" (normalized: "${guessNormalized}"): ${normalized === guessNormalized}`);
+        return normalized === guessNormalized;
+      });
+      console.log(`   Is correct guess: ${isCorrect}`);
     }
     
     if (normalized === startNormalized) return 'start';
     if (normalized === endNormalized) return 'end';
     
-    const isCorrect = correctGuesses.some(guess => 
-      normalizeDistrictName(guess) === normalized
-    );
+    // Enhanced correct guess checking with detailed logging
+    const isCorrect = correctGuesses.some(guess => {
+      const guessNormalized = normalizeDistrictName(guess);
+      return normalized === guessNormalized;
+    });
+    
     if (isCorrect) return 'correct';
     
     return 'default';
@@ -301,7 +345,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
           })}
         </svg>
         
-        {/* Enhanced Legend with debugging info */}
+        {/* Simplified Legend - only Start and End */}
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Legend</h3>
           <div className="space-y-1 text-xs">
@@ -313,25 +357,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
               <div className="w-4 h-3 bg-red-500 rounded border border-red-700"></div>
               <span className="text-gray-800">End: {endDistrict}</span>
             </div>
-            {correctGuesses.length > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-3 bg-yellow-500 rounded border border-yellow-700"></div>
-                <span>Correct ({correctGuesses.length})</span>
-              </div>
-            )}
           </div>
-          
-          {/* Enhanced debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-2 pt-2 border-t border-gray-200">
-              <div className="text-xs text-gray-500">
-                <div>Districts found: {districtPaths.length}</div>
-                <div>Start found: {stateCount.start > 0 ? '✓' : '✗'}</div>
-                <div>End found: {stateCount.end > 0 ? '✓' : '✗'}</div>
-                <div>Correct: {stateCount.correct}</div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -344,12 +370,15 @@ const SimpleFallbackMap: React.FC<{
   endDistrict: string;
   correctGuesses: string[];
 }> = ({ startDistrict, endDistrict, correctGuesses }) => {
-  // Enhanced sample districts with more accurate positioning including Chitwan
+  // Enhanced sample districts with more accurate positioning including all mentioned districts
   const sampleDistricts = [
     { name: 'Kathmandu', path: 'M380 180 L420 180 L420 220 L380 220 Z' },
     { name: 'Lalitpur', path: 'M380 220 L420 220 L420 260 L380 260 Z' },
     { name: 'Bhaktapur', path: 'M420 180 L460 180 L460 220 L420 220 Z' },
     { name: 'Chitwan', path: 'M340 280 L440 280 L440 320 L340 320 Z' },
+    { name: 'Makwanpur', path: 'M340 240 L440 240 L440 280 L340 280 Z' },
+    { name: 'Kavrepalanchok', path: 'M420 220 L480 220 L480 280 L420 280 Z' },
+    { name: 'Sindhupalchok', path: 'M420 120 L480 120 L480 180 L420 180 Z' },
     { name: 'Kaski', path: 'M200 160 L280 160 L280 240 L200 240 Z' },
     { name: 'Sunsari', path: 'M600 200 L650 200 L650 240 L600 240 Z' },
     { name: 'Kapilvastu', path: 'M150 300 L200 300 L200 340 L150 340 Z' },
@@ -397,15 +426,6 @@ const SimpleFallbackMap: React.FC<{
       <p className="text-xs text-gray-500 mt-2">
         Map shows visual progress only • Districts shown: {sampleDistricts.length}/77
       </p>
-      
-      {/* Debug info for fallback */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-2 text-xs text-gray-400">
-          Start: {startDistrict} | End: {endDistrict}
-          <br />
-          Fallback - Start: {getState(startDistrict)} | End: {getState(endDistrict)}
-        </div>
-      )}
     </div>
   );
 };
