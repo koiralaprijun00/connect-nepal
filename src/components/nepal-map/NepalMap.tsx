@@ -39,10 +39,29 @@ export const NepalMap: React.FC<NepalMapProps> = ({
         const districts = parseSVG(svgContent);
         setDistrictPaths(districts);
         
-        // Debug: Log which districts were found
-        console.log('Parsed districts:', districts.map(d => d.name));
+        // Enhanced debug: Log which districts were found and their mappings
+        console.log('=== SVG PARSING DEBUG ===');
+        console.log('Total districts parsed:', districts.length);
         console.log('Looking for start district:', startDistrict);
         console.log('Looking for end district:', endDistrict);
+        
+        // Check if start and end districts are found
+        const startFound = districts.find(d => 
+          normalizeDistrictName(d.name) === normalizeDistrictName(startDistrict)
+        );
+        const endFound = districts.find(d => 
+          normalizeDistrictName(d.name) === normalizeDistrictName(endDistrict)
+        );
+        
+        console.log('Start district found:', startFound ? `✓ (${startFound.name})` : '✗');
+        console.log('End district found:', endFound ? `✓ (${endFound.name})` : '✗');
+        
+        if (!endFound) {
+          console.log('Available districts containing "chitwan":', 
+            districts.filter(d => d.name.toLowerCase().includes('chitwan')));
+          console.log('All district names:', districts.map(d => d.name).sort());
+        }
+        
       } catch (err) {
         console.error('Map loading failed:', err);
         setError('Map not available');
@@ -54,34 +73,60 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     loadMap();
   }, [startDistrict, endDistrict]);
 
-  // Enhanced SVG parser with better district name mapping
+  // Enhanced SVG parser with comprehensive district name mapping
   const parseSVG = (content: string): DistrictPathData[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(content, 'image/svg+xml');
-    const paths = doc.querySelectorAll('path[id], path[data-name], path[data-district]');
+    const paths = doc.querySelectorAll('path[id], path[data-name], path[data-district], path[title]');
     
-    return Array.from(paths).map(path => {
+    const results: DistrictPathData[] = [];
+    
+    Array.from(paths).forEach(path => {
       const id = path.getAttribute('id') || '';
       const dataName = path.getAttribute('data-name') || '';
       const dataDistrict = path.getAttribute('data-district') || '';
+      const title = path.getAttribute('title') || '';
       const pathData = path.getAttribute('d') || '';
       
-      if (!pathData) return null;
+      if (!pathData) return;
       
-      // Try multiple sources for district name
-      const name = mapIdToName(id) || mapIdToName(dataName) || mapIdToName(dataDistrict) || id;
+      // Try multiple sources for district name with enhanced mapping
+      const name = mapIdToName(id) || 
+                   mapIdToName(dataName) || 
+                   mapIdToName(dataDistrict) || 
+                   mapIdToName(title) || 
+                   id;
       
-      return { id, name: name || id, pathData };
-    }).filter((d): d is DistrictPathData => d !== null && d.name && d.pathData);
+      if (name && name !== id) {
+        results.push({ id, name, pathData });
+        console.log(`Mapped: "${id}" → "${name}"`);
+      } else if (id) {
+        // Keep unmapped districts for debugging
+        results.push({ id, name: id, pathData });
+        console.log(`Unmapped: "${id}" (kept as-is)`);
+      }
+    });
+    
+    return results.filter(d => d.name && d.pathData);
   };
 
-  // Enhanced district name mapping with more variations
+  // Comprehensive district name mapping with special focus on problematic districts
   const mapIdToName = (id: string): string | null => {
     if (!id) return null;
     
-    // Enhanced mapping for common variations
+    // Enhanced mapping for common variations and problematic districts
     const idMappings: Record<string, string> = {
-      // Direct mappings for common SVG IDs
+      // Chitwan variations - the main issue
+      'chitwan': 'Chitwan',
+      'chitawan': 'Chitwan',
+      'chitwon': 'Chitwan',
+      'chitvan': 'Chitwan',
+      'chitwan_district': 'Chitwan',
+      'district_chitwan': 'Chitwan',
+      'np_chitwan': 'Chitwan',
+      'npl_chitwan': 'Chitwan',
+      
+      // Other common mappings
       'kapilbastu': 'Kapilvastu',
       'kapilavastu': 'Kapilvastu', 
       'kapilvastu': 'Kapilvastu',
@@ -89,9 +134,11 @@ export const NepalMap: React.FC<NepalMapProps> = ({
       'kathmandu': 'Kathmandu',
       'lalitpur': 'Lalitpur',
       'bhaktapur': 'Bhaktapur',
-      'chitwan': 'Chitwan',
-      'pokhara': 'Kaski', // City to district mapping
-      'biratnagar': 'Morang', // City to district mapping
+      'morang': 'Morang',
+      
+      // City to district mappings
+      'pokhara': 'Kaski',
+      'biratnagar': 'Morang',
       
       // Handle common variations
       'nawalparasi': 'Nawalpur',
@@ -100,6 +147,10 @@ export const NepalMap: React.FC<NepalMapProps> = ({
       'rukum': 'Rukum East',
       'rukum_east': 'Rukum East',
       'rukum_west': 'Rukum West',
+      
+      // Additional variations that might exist in SVG
+      'bagmati': 'Chitwan', // Sometimes Chitwan is labeled under old province names
+      'narayani': 'Chitwan', // Old zone name
     };
     
     const normalized = id.toLowerCase().replace(/[-_\s]/g, '');
@@ -107,6 +158,11 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     // Check direct mapping first
     if (idMappings[normalized]) {
       return idMappings[normalized];
+    }
+    
+    // Special handling for Chitwan - check if ID contains chitwan-like patterns
+    if (normalized.includes('chitw') || normalized.includes('chitv')) {
+      return 'Chitwan';
     }
     
     // Try capitalized version
@@ -136,14 +192,16 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     const startNormalized = normalizeDistrictName(startDistrict);
     const endNormalized = normalizeDistrictName(endDistrict);
     
-    // Debug logging for the problematic districts
-    if (districtName.toLowerCase().includes('kapil') || districtName.toLowerCase().includes('suns')) {
-      console.log(`Checking district: ${districtName}`);
-      console.log(`Normalized: ${normalized}`);
-      console.log(`Start normalized: ${startNormalized}`);
-      console.log(`End normalized: ${endNormalized}`);
-      console.log(`Is start: ${normalized === startNormalized}`);
-      console.log(`Is end: ${normalized === endNormalized}`);
+    // Enhanced debug logging for problematic districts
+    if (districtName.toLowerCase().includes('chitwan') || 
+        districtName.toLowerCase().includes('morang') ||
+        districtName.toLowerCase().includes('kapil')) {
+      console.log(`🔍 Checking district: "${districtName}"`);
+      console.log(`   Normalized: "${normalized}"`);
+      console.log(`   Start normalized: "${startNormalized}"`);
+      console.log(`   End normalized: "${endNormalized}"`);
+      console.log(`   Is start: ${normalized === startNormalized}`);
+      console.log(`   Is end: ${normalized === endNormalized}`);
     }
     
     if (normalized === startNormalized) return 'start';
@@ -200,6 +258,19 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     );
   }
 
+  // Count districts by state for debugging
+  const stateCount = {
+    start: 0,
+    end: 0,
+    correct: 0,
+    default: 0
+  };
+  
+  districtPaths.forEach(({ name }) => {
+    const state = getDistrictState(name);
+    stateCount[state]++;
+  });
+
   return (
     <div className={`w-full max-w-4xl mx-auto ${className}`}>
       {/* Map Container */}
@@ -250,13 +321,14 @@ export const NepalMap: React.FC<NepalMapProps> = ({
             )}
           </div>
           
-          {/* Debug info in development */}
+          {/* Enhanced debug info */}
           {process.env.NODE_ENV === 'development' && (
             <div className="mt-2 pt-2 border-t border-gray-200">
               <div className="text-xs text-gray-500">
                 <div>Districts found: {districtPaths.length}</div>
-                <div>Start found: {districtPaths.some(d => getDistrictState(d.name) === 'start') ? '✓' : '✗'}</div>
-                <div>End found: {districtPaths.some(d => getDistrictState(d.name) === 'end') ? '✓' : '✗'}</div>
+                <div>Start found: {stateCount.start > 0 ? '✓' : '✗'}</div>
+                <div>End found: {stateCount.end > 0 ? '✓' : '✗'}</div>
+                <div>Correct: {stateCount.correct}</div>
               </div>
             </div>
           )}
@@ -272,7 +344,7 @@ const SimpleFallbackMap: React.FC<{
   endDistrict: string;
   correctGuesses: string[];
 }> = ({ startDistrict, endDistrict, correctGuesses }) => {
-  // Enhanced sample districts with more accurate positioning
+  // Enhanced sample districts with more accurate positioning including Chitwan
   const sampleDistricts = [
     { name: 'Kathmandu', path: 'M380 180 L420 180 L420 220 L380 220 Z' },
     { name: 'Lalitpur', path: 'M380 220 L420 220 L420 260 L380 260 Z' },
@@ -281,12 +353,13 @@ const SimpleFallbackMap: React.FC<{
     { name: 'Kaski', path: 'M200 160 L280 160 L280 240 L200 240 Z' },
     { name: 'Sunsari', path: 'M600 200 L650 200 L650 240 L600 240 Z' },
     { name: 'Kapilvastu', path: 'M150 300 L200 300 L200 340 L150 340 Z' },
+    { name: 'Morang', path: 'M650 200 L700 200 L700 240 L650 240 Z' },
   ];
 
   const getState = (name: string) => {
-    if (name === startDistrict) return 'start';
-    if (name === endDistrict) return 'end';
-    if (correctGuesses.includes(name)) return 'correct';
+    if (normalizeDistrictName(name) === normalizeDistrictName(startDistrict)) return 'start';
+    if (normalizeDistrictName(name) === normalizeDistrictName(endDistrict)) return 'end';
+    if (correctGuesses.some(guess => normalizeDistrictName(guess) === normalizeDistrictName(name))) return 'correct';
     return 'default';
   };
 
@@ -329,6 +402,8 @@ const SimpleFallbackMap: React.FC<{
       {process.env.NODE_ENV === 'development' && (
         <div className="mt-2 text-xs text-gray-400">
           Start: {startDistrict} | End: {endDistrict}
+          <br />
+          Fallback - Start: {getState(startDistrict)} | End: {getState(endDistrict)}
         </div>
       )}
     </div>
