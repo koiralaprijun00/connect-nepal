@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Puzzle } from '@/types';
-import { GuessResult } from '@/lib/enhancedGameLogic';
+import { GuessResult, FeedbackMessage } from '@/lib/game/GameState';
 import { GuessInput } from '@/components/nepal-traversal/GuessInput';
 import { GuessHistoryCard } from '@/components/nepal-traversal/GuessHistoryCard';
 import NepalMap from '@/components/nepal-map/NepalMap';
@@ -8,13 +8,14 @@ import NepalMap from '@/components/nepal-map/NepalMap';
 interface ClassicModeProps {
   puzzle: Puzzle;
   userPath: string[];
-  guessHistory: GuessResult[];
+  guessHistory: readonly GuessResult[];
   onGuess: (district: string) => void;
   onUndo: () => void;
-  onHint: () => void;
+  onHint: () => string | null;
   isGameWon: boolean;
-  lastFeedback: { type: string; message: string } | null;
+  lastFeedback: FeedbackMessage | null;
   allCorrectIntermediates: Set<string>;
+  canUndo: boolean;
 }
 
 export function ClassicMode({
@@ -26,11 +27,9 @@ export function ClassicMode({
   onHint,
   isGameWon,
   lastFeedback,
-  allCorrectIntermediates
+  allCorrectIntermediates,
+  canUndo
 }: ClassicModeProps) {
-  // Determine if undo is available
-  const canUndo = guessHistory.length > 0;
-  
   // Get correct and incorrect guesses for map
   const correctGuesses = guessHistory
     .filter(g => g.isCorrect)
@@ -40,8 +39,13 @@ export function ClassicMode({
     .filter(g => !g.isCorrect && g.feedback !== 'duplicate')
     .map(g => g.district);
 
-  // Map is now visual-only, no click handling needed
-  
+  // Handle hint with feedback
+  const handleHint = () => {
+    const hint = onHint();
+    // The hint logic is handled by the game engine
+    // Feedback will be managed by the game state
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Main game content */}
@@ -49,10 +53,7 @@ export function ClassicMode({
         {/* Left side: Game inputs and history */}
         <div className="flex flex-col gap-4 lg:w-1/3">
           <GuessInput
-            onSubmit={([district]) => {
-              console.log('GuessInput onSubmit called with:', district);
-              onGuess(district);
-            }}
+            onSubmit={([district]) => onGuess(district)}
             onUndo={onUndo}
             isLoading={false}
             startDistrict={puzzle.startDistrict}
