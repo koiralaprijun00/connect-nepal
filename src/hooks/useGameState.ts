@@ -1,4 +1,4 @@
-import { useReducer, useMemo, useCallback } from 'react';
+import { useReducer, useMemo, useCallback, useRef, useEffect } from 'react';
 import { GameEngine } from '@/lib/game/GameEngine';
 import { GameState, gameStateReducer, createInitialGameState } from '@/lib/game/GameState';
 import type { Puzzle } from '@/types';
@@ -26,17 +26,13 @@ export function useGameState(
 ): UseGameStateReturn {
   const [state, dispatch] = useReducer(gameStateReducer, createInitialGameState(initialPuzzle));
   
-  // Create game engine instance - memoized to prevent recreation
-  const engine = useMemo(() => {
-    const gameEngine = new GameEngine(state.puzzle, adjacencyMap);
-    
-    // Sync engine state with reducer state
-    for (const guess of state.guesses) {
-      gameEngine.makeGuess(guess.district);
-    }
-    
-    return gameEngine;
-  }, [state.puzzle, adjacencyMap]); // Only recreate when puzzle changes
+  // Use ref to maintain engine instance across renders
+  const engineRef = useRef<GameEngine | null>(null);
+  
+  // Initialize or update engine when puzzle changes
+  useEffect(() => {
+    engineRef.current = new GameEngine(state.puzzle, adjacencyMap);
+  }, [state.puzzle, adjacencyMap]);
 
   // Memoized derived state
   const derived = useMemo(() => ({
@@ -51,31 +47,67 @@ export function useGameState(
   // Memoized actions
   const actions = useMemo(() => ({
     makeGuess: (district: string) => {
-      const result = engine.makeGuess(district);
-      // Engine handles its own state, we just need to sync
-      const newState = engine.getState();
-      dispatch({ type: 'INITIALIZE_GAME', puzzle: newState.puzzle });
+      if (!engineRef.current) return;
+      
+      console.log('Making guess:', district);
+      const result = engineRef.current.makeGuess(district);
+      console.log('Guess result:', result);
+      
+      const feedback = {
+        type: result.feedback,
+        message: generateFeedbackMessage(result.feedback, result.district)
+      };
+      
+      dispatch({ 
+        type: 'MAKE_GUESS', 
+        result, 
+        feedback 
+      });
     },
     
     undoGuess: () => {
-      const success = engine.undoLastGuess();
+      if (!engineRef.current) return;
+      
+      const success = engineRef.current.undoLastGuess();
       if (success) {
-        const newState = engine.getState();
-        dispatch({ type: 'INITIALIZE_GAME', puzzle: newState.puzzle });
+        dispatch({ type: 'UNDO_GUESS' });
       }
     },
     
-    getHint: () => engine.getHint(),
+    getHint: () => {
+      if (!engineRef.current) return null;
+      return engineRef.current.getHint();
+    },
     
     newGame: (puzzle: Puzzle) => {
       dispatch({ type: 'NEW_GAME', puzzle });
     },
-  }), [engine]);
+  }), []);
 
   return {
     state,
-    engine,
+    engine: engineRef.current!,
     actions,
     derived,
   };
+}
+
+// Helper function to generate feedback messages
+function generateFeedbackMessage(feedbackType: string, district: string): string {
+  switch (feedbackType) {
+    case 'perfect':
+      return `🎯 Perfect! ${district} is on the shortest path!`;
+    case 'close':
+      return '🔥 Very close! Adjacent to the correct path.';
+    case 'warm':
+      return '🌊 Getting warmer! 2 districts away.';
+    case 'cold':
+      return '❄️ Too far from the correct path.';
+    case 'duplicate':
+      return '🔄 You already guessed this district!';
+    case 'invalid':
+      return '🚫 Invalid district name.';
+    default:
+      return 'Try again!';
+  }
 }

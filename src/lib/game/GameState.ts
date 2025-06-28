@@ -50,13 +50,14 @@ export function gameStateReducer(state: GameState, action: GameAction): GameStat
       return createInitialGameState(action.puzzle);
 
     case 'MAKE_GUESS':
+      const newGuesses = [...state.guesses, action.result];
+      const isGameWon = checkGameWon(newGuesses, state.puzzle);
+      
       return {
         ...state,
-        guesses: [...state.guesses, action.result],
+        guesses: newGuesses,
         feedback: action.feedback,
-        status: action.result.isCorrect && isGameComplete(state.guesses, action.result, state.puzzle) 
-          ? 'won' 
-          : 'playing',
+        status: isGameWon ? 'won' : 'playing',
       };
 
     case 'UNDO_GUESS':
@@ -89,10 +90,9 @@ export function gameStateReducer(state: GameState, action: GameAction): GameStat
 }
 
 // Helper function to check if game is complete
-function isGameComplete(guesses: readonly GuessResult[], newGuess: GuessResult, puzzle: Puzzle): boolean {
-  const allGuesses = [...guesses, newGuess];
+function checkGameWon(guesses: readonly GuessResult[], puzzle: Puzzle): boolean {
   const correctGuesses = new Set(
-    allGuesses
+    guesses
       .filter(g => g.isCorrect)
       .map(g => g.district.toLowerCase())
   );

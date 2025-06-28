@@ -46,6 +46,12 @@ export function ClassicMode({
     // Feedback will be managed by the game state
   };
 
+  // Convert feedback to the format expected by GuessInput
+  const latestGuessResult = lastFeedback ? {
+    type: lastFeedback.type === 'perfect' ? 'success' as const : 'error' as const,
+    message: lastFeedback.message
+  } : null;
+
   return (
     <div className="flex flex-col gap-6">
       {/* Main game content */}
@@ -53,15 +59,15 @@ export function ClassicMode({
         {/* Left side: Game inputs and history */}
         <div className="flex flex-col gap-4 lg:w-1/3">
           <GuessInput
-            onSubmit={([district]) => onGuess(district)}
+            onSubmit={([district]) => {
+              console.log('GuessInput onSubmit called with:', district);
+              onGuess(district);
+            }}
             onUndo={onUndo}
             isLoading={false}
             startDistrict={puzzle.startDistrict}
             endDistrict={puzzle.endDistrict}
-            latestGuessResult={lastFeedback ? {
-              type: lastFeedback.type === 'perfect' ? 'success' : 'error',
-              message: lastFeedback.message
-            } : null}
+            latestGuessResult={latestGuessResult}
             isGameWon={isGameWon}
             canUndo={canUndo}
           />

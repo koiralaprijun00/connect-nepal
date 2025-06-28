@@ -10,8 +10,8 @@ import type { Puzzle } from '@/types';
 // Default puzzle to prevent hydration issues
 const DEFAULT_PUZZLE: Puzzle = {
   id: 'default',
-  startDistrict: 'kathmandu',
-  endDistrict: 'chitwan',
+  startDistrict: 'Kathmandu',
+  endDistrict: 'Chitwan',
   shortestPath: ['kathmandu', 'dhading', 'chitwan']
 };
 
@@ -20,7 +20,7 @@ export function NepalTraversalClient() {
   const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle>(DEFAULT_PUZZLE);
   
   // Use the new game state hook
-  const { state, engine, actions, derived } = useGameState(currentPuzzle, DISTRICT_ADJACENCY);
+  const { state, actions, derived } = useGameState(currentPuzzle, DISTRICT_ADJACENCY);
 
   // Initialize client-side only
   useEffect(() => {
@@ -28,16 +28,20 @@ export function NepalTraversalClient() {
     // Generate initial puzzle after hydration
     try {
       const initialPuzzle = getRandomPuzzle(true, 6);
+      console.log('Generated initial puzzle:', initialPuzzle);
       setCurrentPuzzle(initialPuzzle);
+      actions.newGame(initialPuzzle);
     } catch (error) {
       console.error('Failed to generate initial puzzle:', error);
       setCurrentPuzzle(DEFAULT_PUZZLE);
+      actions.newGame(DEFAULT_PUZZLE);
     }
-  }, []);
+  }, [actions]);
 
   const handleNewGame = useCallback(() => {
     try {
       const newPuzzle = getRandomPuzzle(true, 6);
+      console.log('Generated new puzzle:', newPuzzle);
       setCurrentPuzzle(newPuzzle);
       actions.newGame(newPuzzle);
     } catch (error) {
