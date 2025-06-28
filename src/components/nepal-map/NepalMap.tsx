@@ -57,12 +57,33 @@ export const NepalMap: React.FC<NepalMapProps> = ({
         console.log('Start district found:', startFound ? `✓ (${startFound.name})` : '✗');
         console.log('End district found:', endFound ? `✓ (${endFound.name})` : '✗');
         
-        // Check correct guesses mapping
+        // Check correct guesses mapping with detailed analysis
         correctGuesses.forEach(guess => {
           const found = districts.find(d => 
             normalizeDistrictName(d.name) === normalizeDistrictName(guess)
           );
           console.log(`Correct guess "${guess}" found:`, found ? `✓ (${found.name})` : '✗');
+          
+          // Special debugging for Makwanpur
+          if (guess.toLowerCase().includes('makwan')) {
+            console.log('🔍 MAKWANPUR DEBUGGING:');
+            console.log('  Looking for variations of:', guess);
+            
+            // Show all districts that might be Makwanpur
+            const possibleMatches = districts.filter(d => 
+              d.id.toLowerCase().includes('makw') || 
+              d.name.toLowerCase().includes('makw') ||
+              d.id.toLowerCase().includes('bagmati') ||
+              d.id.toLowerCase().includes('narayani')
+            );
+            
+            console.log('  Possible Makwanpur matches found:', possibleMatches);
+            
+            // Show all district IDs for manual inspection
+            console.log('  All district IDs containing "mak":', 
+              districts.filter(d => d.id.toLowerCase().includes('mak')).map(d => d.id)
+            );
+          }
         });
         
       } catch (err) {
@@ -80,7 +101,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
   const parseSVG = (content: string): DistrictPathData[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(content, 'image/svg+xml');
-    const paths = doc.querySelectorAll('path[id], path[data-name], path[data-district], path[title]');
+    const paths = doc.querySelectorAll('path[id], path[data-name], path[data-district], path[title], path[class]');
     
     const results: DistrictPathData[] = [];
     
@@ -89,6 +110,7 @@ export const NepalMap: React.FC<NepalMapProps> = ({
       const dataName = path.getAttribute('data-name') || '';
       const dataDistrict = path.getAttribute('data-district') || '';
       const title = path.getAttribute('title') || '';
+      const className = path.getAttribute('class') || '';
       const pathData = path.getAttribute('d') || '';
       
       if (!pathData) return;
@@ -97,7 +119,8 @@ export const NepalMap: React.FC<NepalMapProps> = ({
       const name = mapIdToName(id) || 
                    mapIdToName(dataName) || 
                    mapIdToName(dataDistrict) || 
-                   mapIdToName(title) || 
+                   mapIdToName(title) ||
+                   mapIdToName(className) ||
                    id;
       
       if (name && name !== id) {
@@ -113,12 +136,42 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     return results.filter(d => d.name && d.pathData);
   };
 
-  // Comprehensive district name mapping with special focus on problematic districts
+  // Comprehensive district name mapping with extensive Makwanpur variations
   const mapIdToName = (id: string): string | null => {
     if (!id) return null;
     
     // Enhanced mapping for common variations and problematic districts
     const idMappings: Record<string, string> = {
+      // Extensive Makwanpur variations
+      'makwanpur': 'Makwanpur',
+      'makvanpur': 'Makwanpur',
+      'makwanpoor': 'Makwanpur',
+      'makwanpur_district': 'Makwanpur',
+      'district_makwanpur': 'Makwanpur',
+      'np_makwanpur': 'Makwanpur',
+      'npl_makwanpur': 'Makwanpur',
+      'makwanpurdistrict': 'Makwanpur',
+      'makwanpur_bagmati': 'Makwanpur',
+      'bagmati_makwanpur': 'Makwanpur',
+      'makwanpur_narayani': 'Makwanpur',
+      'narayani_makwanpur': 'Makwanpur',
+      'makwanpur_zone': 'Makwanpur',
+      'zone_makwanpur': 'Makwanpur',
+      'makwanpur_province': 'Makwanpur',
+      'province_makwanpur': 'Makwanpur',
+      'makwanpur_bagmati_province': 'Makwanpur',
+      'bagmati_province_makwanpur': 'Makwanpur',
+      
+      // Alternative spellings and variations
+      'makvanpoor': 'Makwanpur',
+      'makwanpoor': 'Makwanpur',
+      'makwanpurr': 'Makwanpur',
+      'makwanpurdistrict': 'Makwanpur',
+      'makwanpur1': 'Makwanpur',
+      'makwanpur2': 'Makwanpur',
+      'makwanpur_1': 'Makwanpur',
+      'makwanpur_2': 'Makwanpur',
+      
       // Chitwan variations
       'chitwan': 'Chitwan',
       'chitawan': 'Chitwan',
@@ -128,12 +181,6 @@ export const NepalMap: React.FC<NepalMapProps> = ({
       'district_chitwan': 'Chitwan',
       'np_chitwan': 'Chitwan',
       'npl_chitwan': 'Chitwan',
-      
-      // Makwanpur variations
-      'makwanpur': 'Makwanpur',
-      'makvanpur': 'Makwanpur',
-      'makwanpoor': 'Makwanpur',
-      'makwanpur_district': 'Makwanpur',
       
       // Kavrepalanchok variations
       'kavrepalanchok': 'Kavrepalanchok',
@@ -158,6 +205,11 @@ export const NepalMap: React.FC<NepalMapProps> = ({
       'lalitpur': 'Lalitpur',
       'bhaktapur': 'Bhaktapur',
       'morang': 'Morang',
+      'dhankuta': 'Dhankuta',
+      'udayapur': 'Udayapur',
+      'tanahu': 'Tanahu',
+      'syangja': 'Syangja',
+      'ilam': 'Ilam',
       
       // City to district mappings
       'pokhara': 'Kaski',
@@ -172,8 +224,9 @@ export const NepalMap: React.FC<NepalMapProps> = ({
       'rukum_west': 'Rukum West',
       
       // Additional variations that might exist in SVG
-      'bagmati': 'Chitwan', // Sometimes Chitwan is labeled under old province names
-      'narayani': 'Chitwan', // Old zone name
+      'bagmati': 'Makwanpur', // Sometimes Makwanpur is labeled under old province names
+      'narayani': 'Makwanpur', // Old zone name that might be used for Makwanpur
+      'hetauda': 'Makwanpur', // Capital city of Makwanpur
     };
     
     const normalized = id.toLowerCase().replace(/[-_\s]/g, '');
@@ -184,17 +237,36 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     }
     
     // Special handling for specific districts - check if ID contains district-like patterns
+    if (normalized.includes('makw') || normalized.includes('makv')) {
+      return 'Makwanpur';
+    }
     if (normalized.includes('chitw') || normalized.includes('chitv')) {
       return 'Chitwan';
-    }
-    if (normalized.includes('makwan') || normalized.includes('makvan')) {
-      return 'Makwanpur';
     }
     if (normalized.includes('kavre') || normalized.includes('palanchok') || normalized.includes('palanchowk')) {
       return 'Kavrepalanchok';
     }
     if (normalized.includes('sindhup') && normalized.includes('chok')) {
       return 'Sindhupalchok';
+    }
+    if (normalized.includes('dhankut')) {
+      return 'Dhankuta';
+    }
+    if (normalized.includes('udayap')) {
+      return 'Udayapur';
+    }
+    if (normalized.includes('tanah')) {
+      return 'Tanahu';
+    }
+    if (normalized.includes('syangj')) {
+      return 'Syangja';
+    }
+    
+    // Check if it might be Makwanpur based on common alternative names
+    if (normalized.includes('hetaud') || // Hetauda is the capital
+        normalized.includes('bagmat') || // Old province name
+        normalized.includes('narayan')) { // Old zone name
+      return 'Makwanpur';
     }
     
     // Try capitalized version
@@ -225,10 +297,14 @@ export const NepalMap: React.FC<NepalMapProps> = ({
     const endNormalized = normalizeDistrictName(endDistrict);
     
     // Enhanced debug logging for problematic districts
-    if (districtName.toLowerCase().includes('chitwan') || 
-        districtName.toLowerCase().includes('makwan') ||
+    if (districtName.toLowerCase().includes('makwan') || 
+        districtName.toLowerCase().includes('chitwan') || 
         districtName.toLowerCase().includes('kavre') ||
-        districtName.toLowerCase().includes('sindhup')) {
+        districtName.toLowerCase().includes('sindhup') ||
+        districtName.toLowerCase().includes('dhankut') ||
+        districtName.toLowerCase().includes('udayap') ||
+        districtName.toLowerCase().includes('tanah') ||
+        districtName.toLowerCase().includes('syangj')) {
       console.log(`🔍 Checking district: "${districtName}"`);
       console.log(`   Normalized: "${normalized}"`);
       console.log(`   Start normalized: "${startNormalized}"`);
@@ -383,6 +459,11 @@ const SimpleFallbackMap: React.FC<{
     { name: 'Sunsari', path: 'M600 200 L650 200 L650 240 L600 240 Z' },
     { name: 'Kapilvastu', path: 'M150 300 L200 300 L200 340 L150 340 Z' },
     { name: 'Morang', path: 'M650 200 L700 200 L700 240 L650 240 Z' },
+    { name: 'Dhankuta', path: 'M650 160 L700 160 L700 200 L650 200 Z' },
+    { name: 'Udayapur', path: 'M600 160 L650 160 L650 200 L600 200 Z' },
+    { name: 'Tanahu', path: 'M280 160 L340 160 L340 200 L280 200 Z' },
+    { name: 'Syangja', path: 'M240 200 L300 200 L300 240 L240 240 Z' },
+    { name: 'Ilam', path: 'M700 160 L750 160 L750 200 L700 200 Z' },
   ];
 
   const getState = (name: string) => {
